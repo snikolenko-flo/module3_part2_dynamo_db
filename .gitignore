@@ -22,3 +22,5 @@ typings/
 documentation/
 coverage/
 .esbuild/
+.DS_Store
+build/

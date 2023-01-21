@@ -4,6 +4,10 @@
   "description": "AWS + Serverless API for your application",
   "main": "index.js",
   "scripts": {
+    "build:frontend": "tsc -p frontend/tsconfig.json",
+    "rebuild:frontend": "rm -rf ./build && npm run build:frontend",
+    "cp:frontend": "cp -a ./frontend/src/html ./frontend/build && cp -a ./frontend/src/css ./frontend/build",
+    "build:front": "npm run rebuild:frontend && npm run cp:frontend",
     "deploy:dev": "sls deploy --stage dev --config serverless.ts --verbose",
     "deploy:prod": "sls deploy --stage prod --config serverless.ts --verbose",
     "deploy:test": "sls deploy --stage test --config serverless.ts --verbose",

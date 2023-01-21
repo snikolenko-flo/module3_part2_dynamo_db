@@ -1,0 +1,16 @@
+div.gallery {
+  margin: 5px;
+  float: left;
+  width: 180px;
+}
+
+div.gallery img {
+  width: 100%;
+  height: auto;
+}
+
+ul {
+  list-style: none;
+  width: 10px;
+  padding: 5px;
+}

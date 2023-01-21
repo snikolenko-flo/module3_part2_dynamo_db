@@ -1,9 +1,7 @@
 import type { AWS } from '@serverless/typescript';
-import { examplesConfig } from './config/serverless/parts/examples';
-import { getMediaInfoConfig } from './config/serverless/parts/get-media-info';
-import { jobsConfig } from './config/serverless/parts/jobs';
-import { restApiCorsConfig } from './config/serverless/parts/rest-api-cors';
-import { usersConfig } from './config/serverless/parts/users';
+import { getGalleryConfig } from './config/serverless/parts/gallery';
+import { getLoginConfig } from './config/serverless/parts/login';
+import { getSignupConfig } from './config/serverless/parts/signup';
 import { joinParts } from './config/serverless/utils';
 
 const CLIENT = '${param:CLIENT}';
@@ -78,10 +76,10 @@ const masterConfig: AWS = {
     },
     envFiles: ['env.yml'],
     envEncryptionKeyId: {
-      local: '${file(./kms_key.yml):local}',
-      dev: '${file(./kms_key.yml):dev}',
-      test: '${file(./kms_key.yml):test}',
-      prod: '${file(./kms_key.yml):prod}',
+      //local: '${file(./kms_key.yml):local}',
+      // dev: '${file(./kms_key.yml):dev}',
+      // test: '${file(./kms_key.yml):test}',
+      // prod: '${file(./kms_key.yml):prod}',
     },
     'serverless-offline': {
       ignoreJWTSignature: true,
@@ -140,9 +138,12 @@ const masterConfig: AWS = {
 };
 
 module.exports = joinParts(masterConfig, [
-  restApiCorsConfig,
-  getMediaInfoConfig,
-  jobsConfig,
-  usersConfig,
-  examplesConfig,
+  //restApiCorsConfig,
+  //getMediaInfoConfig,
+  getGalleryConfig,
+  getLoginConfig,
+  getSignupConfig,
+  // jobsConfig,
+  // usersConfig,
+  // examplesConfig,
 ]);

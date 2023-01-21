@@ -7,7 +7,6 @@ export const getMediaInfoConfig: AWSPartitial = {
     },
   },
   functions: {
-    // prefix "api" for API Gateway Lambda triggers
     apiGetMediaInfo: {
       handler: 'api/media-info/handler.getMediaInfo',
       description: 'Return Media Info by video URL',
@@ -19,15 +18,6 @@ export const getMediaInfoConfig: AWSPartitial = {
             method: 'post',
           },
         },
-        // {
-        //   sns: '${param:SNS}',
-        // },
-        // {
-        //   stream: {
-        //     type: 'dynamodb',
-        //     arn: GetAtt('UsersTable.StreamArn'),
-        //   },
-        // },
       ],
     },
   },

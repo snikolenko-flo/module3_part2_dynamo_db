@@ -125,7 +125,7 @@ It is a skeleton for your AWS + Serverless applications.
 - api - Code of the features or CRUD operations of entities
   - feature_name - Code of one feature or CRUD operations of one entity. It should cover the area of one
     responsibility. For example, Media Info feature, CRUD operations (create, remove, update, delete) for user entity
-    - handler.ts - This is a handler file. It should contain Lambda functions for one feature. For example, Media
+    - old_handler.ts - This is a handler file. It should contain Lambda functions for one feature. For example, Media
       Info feature or CRUD operations for the user entity.
     - feature_name.manager.ts - It's the feature manager. Its methods should implement some feature's functionality
     - feature_name.service.ts - It's the feature service. Its methods should implement one of the main steps of some
@@ -146,7 +146,7 @@ It is a skeleton for your AWS + Serverless applications.
 - helper - All auxiliary code
   - http-api/ - Helpers for HTTP API
   - rest-api/ - Helpers for REST API
-  - base-error-handler.ts - Base for building error handlers. Normally you should not use it in lambda.
+  - base-error-old_handler.ts - Base for building error handlers. Normally you should not use it in lambda.
   - environment.ts - Helper for working with environment variables
   - helper.ts - This file contains auxiliary functions
   - logger.ts - This file contains log function that helps log data in the proper way
