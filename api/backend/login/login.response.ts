@@ -1,10 +1,8 @@
-// import { log } from '../helper/logger.js';
-// import { Response } from 'express';
-//
-// export class LoginResponse {
-//   sendToken(res: Response) {
-//     res.statusCode = 200;
-//     res.end(JSON.stringify({ token: 'token' }));
-//     log.info('Auth token was sent to the frontend.');
-//   }
-// }
+import jwt from 'jsonwebtoken';
+
+export class LoginResponse {
+  createJWTToken(user, secret) {
+    const body = { _id: user._id, email: user.email };
+    return jwt.sign({ user: body }, secret);
+  }
+}

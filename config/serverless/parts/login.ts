@@ -1,3 +1,4 @@
+import { simpleAuthorizer } from '../../../api/backend/login/handler';
 import { AWSPartitial } from '../types';
 
 export const getLoginConfig: AWSPartitial = {
@@ -7,18 +8,18 @@ export const getLoginConfig: AWSPartitial = {
     },
   },
   functions: {
-    apiGetLogin: {
+    apiLoginUser: {
       handler: 'api/backend/login/handler.login',
       description: 'Show the default login page',
       timeout: 28,
       events: [
         {
           httpApi: {
-            path: '/',
-            method: 'get',
+            path: '/login',
+            method: 'post',
           },
         },
       ],
-    },
+    }
   },
 };
