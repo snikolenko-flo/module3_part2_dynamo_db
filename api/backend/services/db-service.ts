@@ -1,5 +1,6 @@
 import { opendir, stat } from 'node:fs/promises';
 import { User } from '../models/user.model.js';
+import { IUser } from '../interfaces/user';
 import { Image } from '../models/image.model.js';
 import { GalleryFile } from '../gallery/gallery.file.js';
 import { log } from '../helper/logger.js';
@@ -202,5 +203,10 @@ export class DbService {
     await this.connectToDb(mongoUrl);
     await this.addDefaultUsersToDB();
     await this.addImagesDataToDB(imagesDir);
+  }
+
+  async createUser(email: string, password: string, salt: string): Promise<IUser> {
+    const user = (await User.create({ email, password, salt })) as IUser;
+    return user;
   }
 }

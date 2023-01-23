@@ -9,16 +9,6 @@ import { DbService } from '../services/db-service';
 const secret = process.env.SECRET;
 const mongoUrl = process.env.MONGO_URL;
 
-export const signup: APIGatewayProxyHandlerV2 = async (event) => {
-  log(event);
-  try {
-    console.log('signup');
-    return createResponse(200);
-  } catch (e) {
-    return errorHandler(e);
-  }
-};
-
 export const login: APIGatewayProxyHandlerV2 = async (event) => {
   try {
     const manager = new LoginManager();
