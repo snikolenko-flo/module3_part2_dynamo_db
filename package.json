@@ -13,6 +13,8 @@
     "deploy:test": "sls deploy --stage test --config serverless.ts --verbose",
     "old_command_deploy:local": "sls offline start --stage local --config serverless.ts --noAuth",
     "deploy:local": "sls offline start --stage local --config serverless.ts",
+    "build-defaults:mongodb": "tsc -p api/defaults/tsconfig.json",
+    "add-defaults:mongodb": "node api/defaults/build/add-defaults.db.js",
     "start:mongodb": "brew services start mongodb-community@6.0",
     "stop:mongodb": "brew services stop mongodb-community@6.0",
     "sls:package:dev": "sls package --stage dev --config serverless.ts",

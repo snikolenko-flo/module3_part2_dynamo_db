@@ -6,7 +6,7 @@ export class GalleryService {
 
     urlsList.forEach(function (url) {
       images += `<div class="gallery">
-                   <img src="${FRONTEND_BASE_URL}/api/${url}">
+                   <img src="${FRONTEND_BASE_URL}/${url}">
                  </div>`;
     });
     return images;
