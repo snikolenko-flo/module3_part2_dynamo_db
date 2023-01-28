@@ -26,28 +26,18 @@ export const login: APIGatewayProxyHandlerV2 = async (event) => {
   }
 };
 
-export const simpleAuthorizer = async (event) => {
-  log(event);
-  try {
-    console.log('authorize the user');
-    return {
-      isAuthorized: true,
-      context: {
-        var1: 'v1',
-      },
-    };
-    //return createResponse(200);
-  } catch (e) {
-    return errorHandler(e);
-  }
-};
-
-export const loadGallery: APIGatewayProxyHandlerV2 = async (event) => {
-  log(event);
-  try {
-    console.log('gallery');
-    return createResponse(200);
-  } catch (e) {
-    return errorHandler(e);
-  }
-};
+// export const simpleAuthorizer = async (event) => {
+//   log(event);
+//   try {
+//     console.log('authorize the user');
+//     return {
+//       isAuthorized: true,
+//       context: {
+//         var1: 'v1',
+//       },
+//     };
+//     //return createResponse(200);
+//   } catch (e) {
+//     return errorHandler(e);
+//   }
+// };

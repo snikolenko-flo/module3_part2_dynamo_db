@@ -24,3 +24,4 @@ coverage/
 .esbuild/
 .DS_Store
 build/
+logs

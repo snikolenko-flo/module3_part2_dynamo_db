@@ -14,21 +14,20 @@ const fsService = new FileSystemService();
 
 export class DbService {
   async uploadImageData(filePath: string, userEmail: string): Promise<void> {
-
     const fileMetadata = await fsService.getFileMetadata(filePath);
     const pathWithoutBuiltFolder = fsService.removeFirstDirFromPath(filePath);
 
     const isImage = await Image.findOne({ path: pathWithoutBuiltFolder }).exec();
     if (isImage) return;
 
-    const user = await User.findOne({ 'email': userEmail }).exec();
+    const user = await User.findOne({ email: userEmail }).exec();
     const date = new Date();
 
     const image = new Image({
       path: pathWithoutBuiltFolder,
       metadata: fileMetadata,
       date: date,
-      user: user._id
+      user: user!._id,
     });
 
     await image.save();
@@ -59,11 +58,11 @@ export class DbService {
             const image = new Image({
               path: pathWithoutBuiltFolder,
               metadata: fileStat,
-              date: date
+              date: date,
             });
             await image.save();
           }
-        } catch (e){
+        } catch (e) {
           log.error(`${e} | class: ${this.constructor.name} | function: addImagesData.`);
         }
       }
@@ -76,7 +75,7 @@ export class DbService {
     const defaultUsersArray = ['asergeev@flo.team', 'tpupkin@flo.team', 'vkotikov@flo.team'];
 
     try {
-      const records = await User.find({ 'email': { $in: defaultUsersArray } });
+      const records = await User.find({ email: { $in: defaultUsersArray } });
       if (records.length) return;
 
       const asergeev = new User({

@@ -1,4 +1,4 @@
-import { simpleAuthorizer } from '../../../api/backend/login/handler';
+//import { simpleAuthorizer } from '../../../api/backend/login/handler';
 import { AWSPartitial } from '../types';
 
 export const getLoginConfig: AWSPartitial = {

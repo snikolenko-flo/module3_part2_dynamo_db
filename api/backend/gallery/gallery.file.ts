@@ -65,7 +65,6 @@ export class GalleryFile {
   }
 
   async getPagesAmount(dir: string, limit: number): Promise<number> {
-
     const filesAmount = limit;
 
     const onePage = 1;
