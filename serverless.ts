@@ -3,6 +3,7 @@ import { getGalleryConfig } from './config/serverless/parts/gallery';
 import { getLoginConfig } from './config/serverless/parts/login';
 import { getSignupConfig } from './config/serverless/parts/signup';
 import { joinParts } from './config/serverless/utils';
+import { uploadConfig } from './config/serverless/parts/upload';
 
 const CLIENT = '${param:CLIENT}';
 const SERVICE_NAME = `template-flo-sls`;
@@ -143,6 +144,7 @@ module.exports = joinParts(masterConfig, [
   getGalleryConfig,
   getLoginConfig,
   getSignupConfig,
+  uploadConfig,
   // jobsConfig,
   // usersConfig,
   // examplesConfig,

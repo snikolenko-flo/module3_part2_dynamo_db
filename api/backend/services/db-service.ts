@@ -11,20 +11,23 @@ import crypto from 'node:crypto';
 
 const galleryService = new GalleryFile();
 const fsService = new FileSystemService();
+const mongoUrl = process.env.MONGO_URL;
 
 export class DbService {
   async uploadImageData(filePath: string, userEmail: string): Promise<void> {
-    const fileMetadata = await fsService.getFileMetadata(filePath);
-    const pathWithoutBuiltFolder = fsService.removeFirstDirFromPath(filePath);
+    //const fileMetadata = await fsService.getFileMetadata(filePath);
+    await mongoose.connect(mongoUrl!);
+    const fileMetadata = 'tmp hardcoded value';
 
-    const isImage = await Image.findOne({ path: pathWithoutBuiltFolder }).exec();
+    const isImage = await Image.findOne({ path: filePath }).exec();
     if (isImage) return;
 
     const user = await User.findOne({ email: userEmail }).exec();
+
     const date = new Date();
 
     const image = new Image({
-      path: pathWithoutBuiltFolder,
+      path: filePath,
       metadata: fileMetadata,
       date: date,
       user: user!._id,

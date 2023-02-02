@@ -1,13 +1,15 @@
-div.gallery {
+/* gallery class was used befor to display each image on the frontend */
+
+/* div.gallery {
   margin: 5px;
   float: left;
   width: 180px;
-}
+} */
 
-div.gallery img {
+/* div.gallery img {
   width: 100%;
   height: auto;
-}
+} */
 
 ul {
   list-style: none;

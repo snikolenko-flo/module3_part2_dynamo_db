@@ -9,7 +9,7 @@ export const getGalleryConfig: AWSPartitial = {
   functions: {
     apiGetGallery: {
       handler: 'api/backend/gallery/handler.getGallery',
-      description: 'Show the gallery page',
+      description: 'Get gallery images',
       timeout: 28,
       events: [
         {

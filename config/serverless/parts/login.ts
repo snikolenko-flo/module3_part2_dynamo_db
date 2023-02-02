@@ -10,7 +10,7 @@ export const getLoginConfig: AWSPartitial = {
   functions: {
     apiLoginUser: {
       handler: 'api/backend/login/handler.login',
-      description: 'Show the default login page',
+      description: 'Login user',
       timeout: 28,
       events: [
         {
