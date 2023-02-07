@@ -1,69 +1,22 @@
-// Remove example
-
+import jwt from 'jsonwebtoken';
 import { log } from '@helper/logger';
-import {
-  APIGatewayAuthorizerSimpleResult,
-  APIGatewayRequestAuthorizerHttpApiPayloadV2Event,
-} from '@interfaces/api-gateway-authorizer.interface';
 import { APIGatewayAuthorizerResult, APIGatewayTokenAuthorizerWithContextHandler } from 'aws-lambda';
-import { Handler } from 'aws-lambda/handler';
 
 const UNAUTHORIZED = new Error('Unauthorized');
+const secret = process.env.SECRET;
 
-// Authorizer with simple response
+// Authorizer with policy response (compatible with REST API)
 // See: https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html#http-api-lambda-authorizer.v2
-export const httpApiSimple: Handler<
-  APIGatewayRequestAuthorizerHttpApiPayloadV2Event,
-  APIGatewayAuthorizerSimpleResult
-> = async (event) => {
-  log(event);
-
-  const token = event.identitySource?.[0];
+export const httpApiPolicy: APIGatewayTokenAuthorizerWithContextHandler<Record<string, any>> = async (event) => {
+  log('httpApiPolicy authorizer is triggered');
+  const token = event['headers'].Authorization;
+  const decodedToken = jwt.verify(token, secret);
 
   if (token === 'error') {
     throw new Error('Internal server error');
   }
 
-  if (token !== 'token') {
-    return {
-      isAuthorized: false,
-    };
-  }
-
-  return {
-    isAuthorized: true,
-    context: {
-      var1: 'v1',
-    },
-  };
-};
-
-// Authorizer with policy response (compatible with REST API)
-// See: https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-lambda-authorizer.html#http-api-lambda-authorizer.v2
-export const httpApiPolicy: APIGatewayTokenAuthorizerWithContextHandler<Record<string, any>> = async (event) => {
-  log(event);
-
-  if (event.authorizationToken === 'error') {
-    throw new Error('Internal server error');
-  }
-
-  if (event.authorizationToken !== 'token') {
-    throw UNAUTHORIZED;
-  }
-
-  return generatePolicy('user', 'Allow', '*', {});
-};
-
-// REST API authorizer
-// See: https://docs.aws.amazon.com/apigateway/latest/developerguide/api-gateway-lambda-authorizer-output.html
-export const restApi: APIGatewayTokenAuthorizerWithContextHandler<Record<string, any>> = async (event) => {
-  log(event);
-
-  if (event.authorizationToken === 'error') {
-    throw new Error('Internal server error');
-  }
-
-  if (event.authorizationToken !== 'token') {
+  if (!decodedToken) {
     throw UNAUTHORIZED;
   }
 

@@ -1,12 +1,10 @@
 import { AWSPartitial } from '../types';
 
 export const getGalleryConfig: AWSPartitial = {
-  params: {
-    default: {
-      // SNS: ''
-    },
-  },
   functions: {
+    apiAuthorizer: {
+      handler: 'api/auth/handler.httpApiPolicy',
+    },
     apiGetGallery: {
       handler: 'api/backend/gallery/handler.getGallery',
       description: 'Get gallery images',
@@ -16,6 +14,10 @@ export const getGalleryConfig: AWSPartitial = {
           httpApi: {
             path: '/gallery',
             method: 'get',
+            authorizer: {
+              name: 'apiAuthorizer',
+              type: 'request',
+            },
           },
         },
       ],

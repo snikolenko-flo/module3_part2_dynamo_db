@@ -48,6 +48,16 @@ const masterConfig: AWS = {
     httpApi: {
       payload: '2.0',
       cors: true,
+      authorizers: {
+        apiAuthorizer: {
+          type: 'request',
+          name: 'apiAuthorizer',
+          enableSimpleResponses: true,
+          //issuerUrl: '',
+          //audience: '',
+          identitySource: '$request.header.Authorization',
+        },
+      },
     },
   },
   package: {
@@ -85,67 +95,19 @@ const masterConfig: AWS = {
     'serverless-offline': {
       ignoreJWTSignature: true,
     },
-    // capacities: [
-    //   {
-    //     table: 'UsersTable',
-    //     read: {
-    //       minimum: 5,
-    //       maximum: 100,
-    //       usage: 0.75,
-    //     },
-    //     write: {
-    //       minimum: 5,
-    //       maximum: 100,
-    //       usage: 0.75,
-    //     },
-    //   },
-    //   {
-    //     table: 'JobsTable',
-    //     index: ['ProducerIdGlobalIndex', 'CrewIdGlobalIndex'],
-    //     read: {
-    //       minimum: 5,
-    //       maximum: 100,
-    //       usage: 0.75,
-    //     },
-    //     write: {
-    //       minimum: 5,
-    //       maximum: 100,
-    //       usage: 0.75,
-    //     },
-    //   },
-    // ],
-    // 'serverless-offline-sns': {
-    //   port: 4002,
-    //   debug: false,
-    // },
-    // 'serverless-offline-sqs': {
-    //   autoCreate: true,
-    //   apiVersion: '2012-11-05',
-    //   endpoint: 'http://0.0.0.0:9324',
-    //   region: '${param:REGION}',
-    //   accessKeyId: 'root',
-    //   secretAccessKey: 'root',
-    //   skipCacheInvalidation: false,
-    // },
   },
   plugins: [
     '@redtea/serverless-env-generator',
     'serverless-esbuild',
     'serverless-offline-sqs',
     'serverless-offline',
-    // 'serverless-offline-sns',
     'serverless-prune-plugin',
   ],
 };
 
 module.exports = joinParts(masterConfig, [
-  //restApiCorsConfig,
-  //getMediaInfoConfig,
   getGalleryConfig,
   getLoginConfig,
   getSignupConfig,
   uploadConfig,
-  // jobsConfig,
-  // usersConfig,
-  // examplesConfig,
 ]);
