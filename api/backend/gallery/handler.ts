@@ -22,20 +22,24 @@ export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
     if (isNaN(pageNumber)) return createResponse(400, { message: 'The page number should be an integer' });
     if (!isFinite(pageNumber)) return createResponse(400, { message: 'The page number should be a finite integer' });
 
-    let total = await manager.file.getTotalPages(IMAGES_DIR!);
+    let total = await manager.file.getTotalPages();
     if (user) {
       const userImagesNumber = await dbService.getUserImagesNumber(user, pageLimit);
       total = await manager.file.getUserPagesNumber(IMAGES_DIR!, userImagesNumber);
     }
 
-    const totalForLimit = await manager.file.getTotalPagesForLimit(IMAGES_DIR!, pageLimit);
+    const totalForLimit = await manager.file.getTotalPagesForLimit(pageLimit);
+
+    log(`total: ${total}`);
+    log(`totalForLimit: ${totalForLimit}`);
+    log(`pageNumber: ${pageNumber}`);
 
     if (pageNumber > total || pageNumber <= 0)
-      return createResponse(400, { message: `Page should be greater than 0 and less than ${total + 1}` });
+      return createResponse(400, { message: `Page should be Ggreater than 0 and less than ${total + 1}` });
     log(`The page number ${pageNumber} is ok.`);
 
     if (pageNumber > totalForLimit || pageNumber <= 0)
-      return createResponse(400, { message: `Page should be greater than 0 and less than ${total + 1}` });
+      return createResponse(400, { message: `Page should be Ggreater than 0 and less than ${totalForLimit + 1}` });
     log(`The page number ${pageNumber} is ok.`);
 
     let pagesAmount = await manager.file.getPagesAmount(IMAGES_DIR!, pageLimit);

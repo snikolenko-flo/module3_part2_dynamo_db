@@ -1,8 +1,10 @@
 import { opendir, stat } from 'node:fs/promises';
-import { User } from './user.model.js';
-import { Image } from './image.model.js';
+import { uploadToS3 } from '../backend/services/s3.service';
+import { Image } from '../backend/models/image.model';
+import { User } from '../backend/models/user.model';
 import mongoose from 'mongoose';
 import * as crypto from 'node:crypto';
+import { readFile } from 'node:fs/promises';
 
 export class DbService {
   private async isDirectory(filePath: string): Promise<boolean> {
@@ -25,11 +27,13 @@ export class DbService {
             await this.addImagesData(filePath);
           } else {
             const fileStat = await stat(filePath);
-            const path = directory + '/' + file.name;
+            //const path = directory + '/' + file.name;
+            const path = `http://localhost:4569/local-bucket/${file.name}`;
             const isImage = await Image.findOne({ path: path }).exec();
 
             if (isImage) return;
-
+            const data = await readFile(filePath);
+            uploadToS3(data, file.name, 'local-bucket');
             const date = new Date();
             const image = new Image({
               path: path,

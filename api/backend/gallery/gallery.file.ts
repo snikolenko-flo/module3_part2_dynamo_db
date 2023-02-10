@@ -1,7 +1,18 @@
+import mongoose from 'mongoose';
 import { PER_PAGE } from '../data/constants.js';
 import { opendir, stat } from 'node:fs/promises';
+import { Image } from '../models/image.model';
+
+const mongoUrl = process.env.MONGO_URL;
 
 export class GalleryFile {
+  async getFilesAmountFromDb() {
+    await mongoose.connect(mongoUrl!);
+    const imagesNumber = await Image.countDocuments({}).exec();
+    return imagesNumber;
+    console.log(`GalleryFile | getFilesAmountFromDb | imagesNumber: ${imagesNumber}`);
+  }
+
   async getFilesAmount(directory: string, counter?: number): Promise<number> {
     try {
       const dir = await opendir(directory);
@@ -30,9 +41,8 @@ export class GalleryFile {
     return isDir.isDirectory();
   }
 
-  async getTotalPages(dir: string): Promise<number> {
-    const filesAmount = await this.getFilesAmount(dir);
-
+  async getTotalPages(): Promise<number> {
+    const filesAmount = await this.getFilesAmountFromDb();
     const onePage = 1;
     if (filesAmount <= PER_PAGE) return onePage;
 
@@ -52,7 +62,7 @@ export class GalleryFile {
     return Math.trunc(filesNumber / PER_PAGE) + onePage;
   }
 
-  async getTotalPagesForLimit(dir: string, limit: number): Promise<number> {
+  async getTotalPagesForLimit(limit: number): Promise<number> {
     const filesAmount = limit;
 
     const onePage = 1;

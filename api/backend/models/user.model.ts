@@ -8,9 +8,7 @@ const UserSchema: Schema = new Schema({
   salt: { type: String, required: true },
 });
 
-UserSchema.pre(
-  'save',
-  async function(next) {
+UserSchema.pre('save', async function (next) {
   const crypt = util.promisify(crypto.pbkdf2);
   const hash = await crypt(this.password, this.salt, 1000, 64, 'sha512');
   this.password = hash.toString('hex');

@@ -14,7 +14,7 @@
     "old_command_deploy:local": "sls offline start --stage local --config serverless.ts --noAuth",
     "deploy:local": "sls offline start --stage local --config serverless.ts",
     "build-defaults:mongodb": "tsc -p api/defaults/tsconfig.json",
-    "add-defaults:mongodb": "node api/defaults/build/add-defaults.db.js",
+    "add-defaults:mongodb": "node api/defaults/build/defaults/add-defaults.db.js",
     "build-s3:server": "tsc -p api/s3-server/tsconfig.json",
     "run-s3:server": "node api/s3-server/build/s3.js",
     "start:s3-server": "npm run build-s3:server && npm run run-s3:server",

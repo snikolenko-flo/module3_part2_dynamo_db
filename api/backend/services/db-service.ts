@@ -1,7 +1,7 @@
 import { opendir, stat } from 'node:fs/promises';
-import { User } from '../models/user.model.js';
 import { IUser } from '../interfaces/user';
-import { Image } from '../models/image.model.js';
+import { Image } from '../models/image.model';
+import { User } from '../models/user.model';
 import { GalleryFile } from '../gallery/gallery.file.js';
 import { log } from '../helper/logger.js';
 import mongoose from 'mongoose';
