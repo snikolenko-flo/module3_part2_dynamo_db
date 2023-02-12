@@ -29,8 +29,6 @@ export class DbService {
             await this.addImagesData(filePath);
           } else {
             const buffer = fs.readFileSync(filePath);
-            console.log('buffer from addImagesData');
-            console.log(buffer);
             const metadata = getMetadata(buffer);
 
             const path = `http://localhost:4569/local-bucket/${file.name}`;
@@ -122,39 +120,5 @@ export class DbService {
     await this.connectToDb(mongoUrl);
     await this.addDefaultUsersToDB();
     await this.addImagesDataToDB(imagesDir);
-    process.exit();
   }
 }
-
-// Get file size.
-// const fs = require('fs');
-//
-// const stream = fs.createReadStream('file.txt');
-//
-// let size = 0;
-//
-// stream.on('data', (chunk) => {
-//   size += chunk.length;
-// });
-//
-// stream.on('end', () => {
-//   console.log(`Size of the file is: ${size} bytes`);
-// });
-
-// const path = require('path');
-//
-// const buffer = Buffer.from('hello world', 'utf8');
-// const fileName = 'file.txt';
-// const ext = path.extname(fileName);
-//
-// console.log(`File extension: ${ext}`);
-
-// const fileType = require('file-type');
-//
-// // Example buffer containing the contents of a PNG image file
-// const buffer = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
-//
-// const result = fileType(buffer);
-//
-// console.log(result);
-// // Output: { ext: 'png', mime: 'image/png' }
