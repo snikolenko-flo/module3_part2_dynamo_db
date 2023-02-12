@@ -19,6 +19,6 @@ export const uploadToS3 = (data, filename, bucket) => {
         Body: Buffer.from(data),
       })
     )
-    .then(() => console.log(`File ${filename} is upload to the bucket ${bucket}`))
+    .then(() => console.log(`File ${filename} is uploaded to the bucket ${bucket}`))
     .catch((e) => console.log(`The error ${e} has happened`));
 };

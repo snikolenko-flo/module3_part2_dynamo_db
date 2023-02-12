@@ -1,23 +1,15 @@
-import { opendir, stat } from 'node:fs/promises';
 import { IUser } from '../interfaces/user';
 import { Image } from '../models/image.model';
 import { User } from '../models/user.model';
-import { GalleryFile } from '../gallery/gallery.file.js';
-import { log } from '../helper/logger.js';
+import { log } from '@helper/logger';
 import mongoose from 'mongoose';
-import { FileSystemService } from './file.system.service.js';
 import { PER_PAGE } from '../data/constants.js';
-import crypto from 'node:crypto';
 
-const galleryService = new GalleryFile();
-const fsService = new FileSystemService();
 const mongoUrl = process.env.MONGO_URL;
 
 export class DbService {
-  async uploadImageData(filePath: string, userEmail: string): Promise<void> {
-    //const fileMetadata = await fsService.getFileMetadata(filePath);
+  async uploadImageData(fileMetadata, filePath: string, userEmail: string): Promise<void> {
     await mongoose.connect(mongoUrl!);
-    const fileMetadata = 'tmp hardcoded value';
 
     const isImage = await Image.findOne({ path: filePath }).exec();
     if (isImage) return;
@@ -34,79 +26,7 @@ export class DbService {
     });
 
     await image.save();
-    log.info(`The image ${filePath} was saved`);
-  }
-
-  async addImagesData(directory: string): Promise<void> {
-    try {
-      const dir = await opendir(directory);
-
-      for await (const file of dir) {
-        try {
-          if (file.name.startsWith('.')) continue;
-
-          const filePath = directory + '/' + file.name;
-          const isDir = await galleryService.isDirectory(filePath);
-
-          if (isDir) {
-            await this.addImagesData(filePath);
-          } else {
-            const fileStat = await stat(filePath);
-            const pathWithoutBuiltFolder = fsService.getPathWithoutBuiltFolder(directory, file.name);
-            const isImage = await Image.findOne({ path: pathWithoutBuiltFolder }).exec();
-
-            if (isImage) return;
-
-            const date = new Date();
-            const image = new Image({
-              path: pathWithoutBuiltFolder,
-              metadata: fileStat,
-              date: date,
-            });
-            await image.save();
-          }
-        } catch (e) {
-          log.error(`${e} | class: ${this.constructor.name} | function: addImagesData.`);
-        }
-      }
-    } catch (e) {
-      log.error(`${e} | class: ${this.constructor.name} | function: addImagesData.`);
-    }
-  }
-
-  async addDefaultUsers(): Promise<void> {
-    const defaultUsersArray = ['asergeev@flo.team', 'tpupkin@flo.team', 'vkotikov@flo.team'];
-
-    try {
-      const records = await User.find({ email: { $in: defaultUsersArray } });
-      if (records.length) return;
-
-      const asergeev = new User({
-        email: 'asergeev@flo.team',
-        password: 'jgF5tn4F',
-        salt: crypto.randomBytes(16).toString('hex')
-      });
-      await asergeev.save();
-      log.info(`The user ${asergeev.email} was saved to DB.`);
-
-      const tpupkin = new User({
-        email: 'tpupkin@flo.team',
-        password: 'tpupkin@flo.team',
-        salt: crypto.randomBytes(16).toString('hex')
-      });
-      await tpupkin.save();
-      log.info(`The user ${tpupkin.email} was saved to DB.`);
-
-      const vkotikov = new User({
-        email: 'vkotikov@flo.team',
-        password: 'po3FGas8',
-        salt: crypto.randomBytes(16).toString('hex')
-      });
-      await vkotikov.save();
-      log.info(`The user ${vkotikov.email} was saved to DB.`);
-    } catch (e) {
-      log.error(`${e} | class: ${this.constructor.name} | function: addDefaultUsers.`);
-    }
+    log(`The image ${filePath} was saved`);
   }
 
   async findUser(email: string) {
@@ -131,7 +51,7 @@ export class DbService {
   }
 
   private sortImagesFromOldToNew(images): object[] {
-    return images.sort((a,b) => a.date - b.date);
+    return images.sort((a, b) => a.date - b.date);
   }
 
   private retrieveImagesPaths(images): string[] {
@@ -157,7 +77,7 @@ export class DbService {
       const user = await User.findOne({ 'email': userEmail }).exec();
       const images = await Image.find({ user: user.id }).select(['path', 'date']).sort({date: -1}).limit(limit);
       return images;
-    } catch(e) {
+    } catch (e) {
       log.error(`${e} | class: ${this.constructor.name} | function: getImagesOfUser.`);
     }
   }
@@ -174,38 +94,38 @@ export class DbService {
     }
   }
 
-  private async connectToDb(mongoUrl: string): Promise<void> {
-    try {
-      await mongoose.connect(mongoUrl);
-      log.info(`Database is running at ${mongoUrl}`);
-    } catch (e) {
-      log.error(`${e} | class: ${this.constructor.name} | function: connectToDb.`);
-    }
-  }
+  // private async connectToDb(mongoUrl: string): Promise<void> {
+  //   try {
+  //     await mongoose.connect(mongoUrl);
+  //     log.info(`Database is running at ${mongoUrl}`);
+  //   } catch (e) {
+  //     log.error(`${e} | class: ${this.constructor.name} | function: connectToDb.`);
+  //   }
+  // }
 
-  private async addDefaultUsersToDB(): Promise<void> {
-    try {
-      await this.addDefaultUsers();
-      log.info('Default users have been added to DB.');
-    } catch (e) {
-      log.error(`${e} | class: ${this.constructor.name} | function: addDefaultUsersToDB.`);
-    }
-  }
+  // private async addDefaultUsersToDB(): Promise<void> {
+  //   try {
+  //     await this.addDefaultUsers();
+  //     log.info('Default users have been added to DB.');
+  //   } catch (e) {
+  //     log.error(`${e} | class: ${this.constructor.name} | function: addDefaultUsersToDB.`);
+  //   }
+  // }
+  //
+  // private async addImagesDataToDB(imagesDir: string): Promise<void> {
+  //   try {
+  //     await this.addImagesData(imagesDir);
+  //     log.info('Images have been added to DB.');
+  //   } catch (e) {
+  //     log.error(`${e} | class: ${this.constructor.name} | function: addImagesDataToDB.`);
+  //   }
+  // }
 
-  private async addImagesDataToDB(imagesDir: string): Promise<void> {
-    try {
-      await this.addImagesData(imagesDir);
-      log.info('Images have been added to DB.');
-    } catch (e) {
-      log.error(`${e} | class: ${this.constructor.name} | function: addImagesDataToDB.`);
-    }
-  }
-
-  async startDb(imagesDir: string, mongoUrl: string): Promise<void> {
-    await this.connectToDb(mongoUrl);
-    await this.addDefaultUsersToDB();
-    await this.addImagesDataToDB(imagesDir);
-  }
+  // async startDb(imagesDir: string, mongoUrl: string): Promise<void> {
+  //   await this.connectToDb(mongoUrl);
+  //   await this.addDefaultUsersToDB();
+  //   await this.addImagesDataToDB(imagesDir);
+  // }
 
   async createUser(email: string, password: string, salt: string): Promise<IUser> {
     const user = (await User.create({ email, password, salt })) as IUser;

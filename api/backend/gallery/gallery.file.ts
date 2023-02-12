@@ -52,7 +52,7 @@ export class GalleryFile {
     return Math.trunc(filesAmount / PER_PAGE) + onePage;
   }
 
-  async getUserPagesNumber(dir: string, filesNumber: number): Promise<number> {
+  async getUserPagesNumber(filesNumber: number): Promise<number> {
     const onePage = 1;
     if (filesNumber <= PER_PAGE) return onePage;
 
@@ -74,7 +74,7 @@ export class GalleryFile {
     return Math.trunc(filesAmount / PER_PAGE) + onePage;
   }
 
-  async getPagesAmount(dir: string, limit: number): Promise<number> {
+  async getPagesAmount(limit: number): Promise<number> {
     const filesAmount = limit;
 
     const onePage = 1;

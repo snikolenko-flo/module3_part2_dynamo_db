@@ -5,6 +5,8 @@ import { User } from '../backend/models/user.model';
 import mongoose from 'mongoose';
 import * as crypto from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import fs from 'fs';
+import { getMetadata } from '../backend/services/file.service';
 
 export class DbService {
   private async isDirectory(filePath: string): Promise<boolean> {
@@ -26,8 +28,11 @@ export class DbService {
           if (isDir) {
             await this.addImagesData(filePath);
           } else {
-            const fileStat = await stat(filePath);
-            //const path = directory + '/' + file.name;
+            const buffer = fs.readFileSync(filePath);
+            console.log('buffer from addImagesData');
+            console.log(buffer);
+            const metadata = getMetadata(buffer);
+
             const path = `http://localhost:4569/local-bucket/${file.name}`;
             const isImage = await Image.findOne({ path: path }).exec();
 
@@ -37,7 +42,7 @@ export class DbService {
             const date = new Date();
             const image = new Image({
               path: path,
-              metadata: fileStat,
+              metadata: metadata,
               date: date,
             });
             await image.save();
@@ -120,3 +125,36 @@ export class DbService {
     process.exit();
   }
 }
+
+// Get file size.
+// const fs = require('fs');
+//
+// const stream = fs.createReadStream('file.txt');
+//
+// let size = 0;
+//
+// stream.on('data', (chunk) => {
+//   size += chunk.length;
+// });
+//
+// stream.on('end', () => {
+//   console.log(`Size of the file is: ${size} bytes`);
+// });
+
+// const path = require('path');
+//
+// const buffer = Buffer.from('hello world', 'utf8');
+// const fileName = 'file.txt';
+// const ext = path.extname(fileName);
+//
+// console.log(`File extension: ${ext}`);
+
+// const fileType = require('file-type');
+//
+// // Example buffer containing the contents of a PNG image file
+// const buffer = Buffer.from([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]);
+//
+// const result = fileType(buffer);
+//
+// console.log(result);
+// // Output: { ext: 'png', mime: 'image/png' }

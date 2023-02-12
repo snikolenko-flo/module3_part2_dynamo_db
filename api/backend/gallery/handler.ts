@@ -7,13 +7,16 @@ import { DbService } from '../services/db-service';
 import { GalleryManager } from './gallery.manager';
 
 const mongoUrl = process.env.MONGO_URL;
-const IMAGES_DIR = process.env.IMAGES_DIR;
-const dbService = new DbService();
 
 export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
   try {
+    /**
+     * Create the manager object
+     */
     const manager = new GalleryManager();
-
+    /**
+     * Prepare required data
+     */
     const params = event.queryStringParameters;
     const pageNumber = parseInt(params!.page!);
     const pageLimit = parseInt(params!.limit!);
@@ -21,47 +24,16 @@ export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
 
     if (isNaN(pageNumber)) return createResponse(400, { message: 'The page number should be an integer' });
     if (!isFinite(pageNumber)) return createResponse(400, { message: 'The page number should be a finite integer' });
-
-    let total = await manager.file.getTotalPages();
-    if (user) {
-      const userImagesNumber = await dbService.getUserImagesNumber(user, pageLimit);
-      total = await manager.file.getUserPagesNumber(IMAGES_DIR!, userImagesNumber);
-    }
-
-    const totalForLimit = await manager.file.getTotalPagesForLimit(pageLimit);
-
-    log(`total: ${total}`);
-    log(`totalForLimit: ${totalForLimit}`);
-    log(`pageNumber: ${pageNumber}`);
-
-    if (pageNumber > total || pageNumber <= 0)
-      return createResponse(400, { message: `Page should be Ggreater than 0 and less than ${total + 1}` });
-    log(`The page number ${pageNumber} is ok.`);
-
-    if (pageNumber > totalForLimit || pageNumber <= 0)
-      return createResponse(400, { message: `Page should be Ggreater than 0 and less than ${totalForLimit + 1}` });
-    log(`The page number ${pageNumber} is ok.`);
-
-    let pagesAmount = await manager.file.getPagesAmount(IMAGES_DIR!, pageLimit);
-    if (pagesAmount > total) pagesAmount = total;
-
     await mongoose.connect(mongoUrl!);
-    if (user) {
-      log(`A user ${user} was specified.`);
-      const imagesPaths = await dbService.getUserImages(pageNumber, pageLimit, user);
-      log(`Got images for user ${user}.`);
-
-      return createResponse(200, {
-        total: pagesAmount,
-        objects: imagesPaths,
-      });
-    } else {
-      const imagesPaths = await dbService.getImages(pageNumber, pageLimit);
-      return createResponse(200, {
-        total: pagesAmount,
-        objects: imagesPaths,
-      });
-    }
+    /**
+     * Prepare required services
+     */
+    const dbService = new DbService();
+    /**
+     * Call the manager's method
+     */
+    const galleryImages = await manager.getGallery(user, pageNumber, pageLimit, dbService);
+    return createResponse(200, galleryImages);
   } catch (e) {
     return errorHandler(e);
   }
@@ -73,7 +45,7 @@ export const getImagesLimit: APIGatewayProxyHandlerV2 = async (event) => {
     await mongoose.connect(mongoUrl!);
     const pageLimit = await dbService.getImagesNumber();
     const limit = JSON.stringify({ limit: pageLimit });
-    log('Page limit was sent to the frontend.');
+    log(`Page limit ${limit} was sent to the frontend.`);
     return createResponse(200, limit);
   } catch (e) {
     return errorHandler(e);

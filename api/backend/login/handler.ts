@@ -11,12 +11,22 @@ const mongoUrl = process.env.MONGO_URL;
 
 export const login: APIGatewayProxyHandlerV2 = async (event) => {
   try {
+    /**
+     * Create the manager object
+     */
     const manager = new LoginManager();
+    /**
+     * Prepare required data
+     */
     const { email, password } = JSON.parse(event.body!);
-
+    /**
+     * Prepare required services
+     */
     const dbService = new DbService();
     await mongoose.connect(mongoUrl!);
-
+    /**
+     * Call the manager's method
+     */
     const user = await manager.user.getUser(email, password, dbService);
     const token = await manager.response.createJWTToken(user, secret);
     log('Token is created');

@@ -122,6 +122,7 @@
     "mongoose": "^6.8.4",
     "nodemailer": "^6.7.2",
     "parse-multipart": "^1.0.4",
+    "piexifjs": "^1.0.6",
     "reflect-metadata": "^0.1.13",
     "sequelize": "^6.12.2",
     "sequelize-typescript": "^2.1.1",

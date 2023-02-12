@@ -3,7 +3,6 @@ import { createResponse } from '@helper/http-api/response';
 import { log } from '@helper/logger';
 import mongoose from 'mongoose';
 import crypto from 'node:crypto';
-import { User } from '../models/user.model';
 import { SignupManager } from './signup.manager';
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import { DbService } from '../services/db-service';
@@ -14,20 +13,26 @@ const mongoUrl = process.env.MONGO_URL;
 
 export const signup: APIGatewayProxyHandlerV2 = async (event) => {
   try {
-    console.log('singup is triggered');
+    /**
+     * Create the manager object
+     */
     const manager = new SignupManager();
-
+    /**
+     * Prepare required data
+     */
     const { email, password } = JSON.parse(event.body!);
     const salt = crypto.randomBytes(16).toString('hex');
     await mongoose.connect(mongoUrl!);
-
+    /**
+     * Prepare required services
+     */
     const dbService = new DbService();
     const authService = new AuthService();
-
-    //const user = await User.create({ email, password, salt });
-
+    /**
+     * Call the manager's method
+     */
     const user = await manager.user.createUser(email, password, salt, dbService);
-    console.log(`user in signup/handler: ${user}`);
+    log(`User ${user} is created`);
     const token = await manager.response.getToken(user, secret, authService);
     log('Token is created');
     return createResponse(200, { token });
