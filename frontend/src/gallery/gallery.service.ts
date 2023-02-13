@@ -5,9 +5,13 @@ export class GalleryService {
     let images = '';
 
     urlsList.forEach(function (url) {
-      images += `<p><div>
-                   ${url}
-                 </div></p>`;
+      images += `<div class="gallery">
+                   <img src="${url}">
+                 </div>`;
+
+      // images += `<p><div>
+      //              ${url}
+      //            </div></p>`;
     });
     return images;
   }
