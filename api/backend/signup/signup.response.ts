@@ -1,4 +1,3 @@
-import jwt from 'jsonwebtoken';
 import { AuthService } from '../services/auth';
 
 export class SignupResponse {

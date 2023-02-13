@@ -60,7 +60,6 @@ export class DbService {
 
   async getImages(page: number, limit: number): Promise<string[]> {
     try {
-
       const images = await Image.find({}).select(['path', 'date']).sort({date: -1}).limit(limit);
 
       const sortedImages = this.sortImagesFromOldToNew(images);
@@ -68,64 +67,31 @@ export class DbService {
 
       return this.getImagesPerPage(imagesPaths, page, PER_PAGE);
     } catch (e) {
-      log.error(`${e} | class: ${this.constructor.name} | function: getImages.`);
+      log(`${e} | class: ${this.constructor.name} | function: getImages.`);
     }
   }
 
   private async getImagesOfUser(userEmail: string, limit: number): Promise<object[]> {
     try {
-      const user = await User.findOne({ 'email': userEmail }).exec();
-      const images = await Image.find({ user: user.id }).select(['path', 'date']).sort({date: -1}).limit(limit);
+      const user = await User.findOne({ email: userEmail }).exec();
+      const images = await Image.find({ user: user!.id }).select(['path', 'date']).sort({ date: -1 }).limit(limit);
       return images;
     } catch (e) {
-      log.error(`${e} | class: ${this.constructor.name} | function: getImagesOfUser.`);
+      log(`${e} | class: ${this.constructor.name} | function: getImagesOfUser.`);
     }
   }
 
   async getUserImages(page: number, limit: number, userEmail?: string): Promise<string[]> {
     try {
-      const images = await this.getImagesOfUser(userEmail, limit);
+      const images = await this.getImagesOfUser(userEmail!, limit);
       const sortedImages = this.sortImagesFromOldToNew(images);
       const imagesPaths = this.retrieveImagesPaths(sortedImages);
 
       return this.getImagesPerPage(imagesPaths, page, PER_PAGE);
     } catch (e) {
-      log.error(`${e} | class: ${this.constructor.name} | function: getImages.`);
+      log(`${e} | class: ${this.constructor.name} | function: getImages.`);
     }
   }
-
-  // private async connectToDb(mongoUrl: string): Promise<void> {
-  //   try {
-  //     await mongoose.connect(mongoUrl);
-  //     log.info(`Database is running at ${mongoUrl}`);
-  //   } catch (e) {
-  //     log.error(`${e} | class: ${this.constructor.name} | function: connectToDb.`);
-  //   }
-  // }
-
-  // private async addDefaultUsersToDB(): Promise<void> {
-  //   try {
-  //     await this.addDefaultUsers();
-  //     log.info('Default users have been added to DB.');
-  //   } catch (e) {
-  //     log.error(`${e} | class: ${this.constructor.name} | function: addDefaultUsersToDB.`);
-  //   }
-  // }
-  //
-  // private async addImagesDataToDB(imagesDir: string): Promise<void> {
-  //   try {
-  //     await this.addImagesData(imagesDir);
-  //     log.info('Images have been added to DB.');
-  //   } catch (e) {
-  //     log.error(`${e} | class: ${this.constructor.name} | function: addImagesDataToDB.`);
-  //   }
-  // }
-
-  // async startDb(imagesDir: string, mongoUrl: string): Promise<void> {
-  //   await this.connectToDb(mongoUrl);
-  //   await this.addDefaultUsersToDB();
-  //   await this.addImagesDataToDB(imagesDir);
-  // }
 
   async createUser(email: string, password: string, salt: string): Promise<IUser> {
     const user = (await User.create({ email, password, salt })) as IUser;
