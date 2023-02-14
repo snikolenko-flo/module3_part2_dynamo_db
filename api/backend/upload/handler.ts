@@ -1,4 +1,4 @@
-import * as parseMultipart from 'parse-multipart';
+import parseMultipart from 'parse-multipart';
 import { DbService } from '../services/db-service';
 import jwt from 'jsonwebtoken';
 import { uploadToS3 } from '../services/s3.service';
@@ -23,7 +23,7 @@ export const upload = async (event) => {
 
 function extractFile(event) {
   const boundary = parseMultipart.getBoundary(event.headers['content-type']);
-  const parts = parseMultipart.Parse(Buffer.from(event.body), boundary);
+  const parts = parseMultipart.Parse(Buffer.from(event.body, 'binary'), boundary);
   const [{ filename, data }] = parts;
   return {
     filename,

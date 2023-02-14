@@ -8,10 +8,6 @@ export class GalleryService {
       images += `<div class="gallery">
                    <img src="${url}">
                  </div>`;
-
-      // images += `<p><div>
-      //              ${url}
-      //            </div></p>`;
     });
     return images;
   }
