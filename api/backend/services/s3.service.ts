@@ -1,7 +1,6 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 export const uploadToS3 = (data, filename, bucket) => {
-  console.log('uploadToS3 service is triggered.');
   const client = new S3Client({
     forcePathStyle: true,
     credentials: {

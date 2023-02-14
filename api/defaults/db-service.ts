@@ -8,6 +8,8 @@ import { readFile } from 'node:fs/promises';
 import fs from 'fs';
 import { getMetadata } from '../backend/services/file.service';
 
+const defaultImagesType = 'image/jpeg';
+
 export class DbService {
   private async isDirectory(filePath: string): Promise<boolean> {
     const isDir = await stat(filePath);
@@ -29,7 +31,7 @@ export class DbService {
             await this.addImagesData(filePath);
           } else {
             const buffer = fs.readFileSync(filePath);
-            const metadata = getMetadata(buffer);
+            const metadata = getMetadata(buffer, defaultImagesType);
 
             const path = `http://localhost:4569/local-bucket/${file.name}`;
             const isImage = await Image.findOne({ path: path }).exec();
