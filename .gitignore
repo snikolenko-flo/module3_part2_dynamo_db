@@ -14,7 +14,6 @@ jspm_packages
 .build/
 kms_key.yml
 .env
-env.yml
 **/.env
 **/api/**.js
 .nyc_output/
