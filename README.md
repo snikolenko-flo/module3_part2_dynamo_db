@@ -1,3 +1,38 @@
+# Gallery app
+
+There is a login page with email and password fields.  
+A user fills out the fields and clicks on the login button.  
+The app sends a POST request to `http://127.0.0.1:3000/login`
+with user data.
+
+Server sends back a token or an error message.  
+The token will be expired after 10 minutes.
+
+After authorization is finished the app sends a GET request to `http://127.0.0.1:3000/gallery`  
+Server sends back images urls. The app wrap them into html and displays to the user.
+
+# Launching
+
+Run the command `npm run start` from the project root directory.  
+In a separate terminal run the command `npm run build:front`.  
+Open the frontend folder in VS Code editor and run built-in live server for the login page located in the path:
+`./frontend/build/html/login.html`
+
+The login page `http://127.0.0.1:5500/frontend/src/html/login.html` will be opened in a new browser tab.
+
+Enter valid email and password and click on the login button.  
+A first page of a gallery will be opened:
+
+`http://127.0.0.1:3000/gallery.html?page=1`
+
+You can set limit for number of images. E.g.:
+
+`http://127.0.0.1:3000/gallery.html?page=1&limit=50`
+
+And you also can filter images by user. E.g.:
+
+`http://127.0.0.1:3000/gallery.html?page=1&limit=1&filter=user@mail.com`
+
 # AWS + Serverless API for your application
 
 ## Project information
@@ -123,18 +158,24 @@ It is a skeleton for your AWS + Serverless applications.
 
 - .circleci - Configuration for CI/CD
 - api - Code of the features or CRUD operations of entities
-  - feature_name - Code of one feature or CRUD operations of one entity. It should cover the area of one
-    responsibility. For example, Media Info feature, CRUD operations (create, remove, update, delete) for user entity
-    - old_handler.ts - This is a handler file. It should contain Lambda functions for one feature. For example, Media
-      Info feature or CRUD operations for the user entity.
-    - feature_name.manager.ts - It's the feature manager. Its methods should implement some feature's functionality
-    - feature_name.service.ts - It's the feature service. Its methods should implement one of the main steps of some
-      feature's functionality
-    - feature_name.interface.ts - This file should contain all required interfaces for the feature
-- bin - Executable files (third party libraries that can be used inside a Lambda function)
+  - auth - Contains authorization handler
+  - backend - Contains main logic
+    - data - Contains some constants
+    - gallery - Module that is responsible for processing requests and sending images to the client
+    - images - Contains all images for gallery
+    - interfaces - Contains interfaces
+    - login - Module that is responsible for checking user credentials and sending an auth token to the user
+    - models - Contains db models
+    - services - Contains additional services
+    - signup - Module that is responsible for adding new users to DB
+    - upload - Module that is responsible for uploading images to S3 and images data to DB
 - config - Folder for configurations
   - serverless - TypeScript files for the description of Serverless resources
     - parts - TypeScript files for the description of Lambda function with their triggers and resources like S3 buckets, SQS, DynamoDB tables, etc.
+    - gallery.ts - Contains description for Lambda function that is responsible
+    - login.ts - Contains description for Lambda function that is responsible for validating user and login
+    - signup.ts - Contains description for Lambda function that is responsible for adding new user to DB
+    - upload.ts - Contains description for Lambda function that is responsible for uploading images to S3 and images data to DB
       - examples.ts - TypeScript file for description Lambda functions with their triggers for one feature
       - feature.ts - TypeScript file for description Lambda functions with their triggers for one feature
       - rest-api-cors.ts - Helper for setting up CORS for REST API
@@ -143,6 +184,15 @@ It is a skeleton for your AWS + Serverless applications.
     - cf-intristic-fn.ts - Helper with function for CloudFormation
     - types.ts - Types for Serverless configurations
     - utils.ts - Helper for Serverless configurations
+- frontend - Contains frontend logic
+  - auth - This module manages login and signup
+  - css - Contains css files
+  - data - Contains additional data
+  - gallery - Module that is responsible for getting images from a server and rendering them
+  - html - Contains html files
+  - interfaces - Contains interfaces
+  - services - Contains additional services
+
 - helper - All auxiliary code
   - http-api/ - Helpers for HTTP API
   - rest-api/ - Helpers for REST API
@@ -151,17 +201,6 @@ It is a skeleton for your AWS + Serverless applications.
   - helper.ts - This file contains auxiliary functions
   - logger.ts - This file contains log function that helps log data in the proper way
 - interfaces
-- models - Models for the databases
-  - DynamoDB
-    - user.model.ts
-    - job.model.ts
-  - PostgreSQL
-    - account.model.ts
-    - domain.model.ts
-- services - Classes for working with third party libraries, APIs, services, etc.
-  - cloud-formation.service.ts
-  - email.service.ts
-  - s3.service.ts
 - docker-compose.yml
 - env.yml - Environment variables
 - package.json
