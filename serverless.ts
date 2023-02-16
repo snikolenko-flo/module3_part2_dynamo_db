@@ -17,7 +17,8 @@ const masterConfig: AWS = {
   params: {
     // default parameters
     default: {
-      REGION: 'us-east-1',
+      //REGION: 'us-east-1',
+      REGION: 'ap-northeast-1',
       CLIENT: 'FLO',
       PROFILE: 'default',
     },
@@ -87,7 +88,7 @@ const masterConfig: AWS = {
     },
     envFiles: ['env.yml'],
     envEncryptionKeyId: {
-      //local: '${file(./kms_key.yml):local}',
+      local: '${file(./kms_key.yml):local}',
       // dev: '${file(./kms_key.yml):dev}',
       // test: '${file(./kms_key.yml):test}',
       // prod: '${file(./kms_key.yml):prod}',
