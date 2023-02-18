@@ -17,7 +17,11 @@
     "lint-fix": "eslint  --fix --ext .ts",
     "build": "npx tsc",
     "prettier_write": " npx prettier --write ",
-    "prettier_check": "npx prettier --check "
+    "prettier_check": "npx prettier --check ",
+    "build:frontend": "tsc -p tsconfig.json",
+    "rebuild:frontend": "rm -rf build && npm run build:frontend",
+    "cp:frontend": "cp -a src/html build && cp -a src/css build",
+    "build:front": "npm run rebuild:frontend && npm run cp:frontend"
   },
   "repository": {
     "type": "git",
