@@ -25,3 +25,4 @@ coverage/
 build/
 logs
 ../.DS_Store/
+.idea
