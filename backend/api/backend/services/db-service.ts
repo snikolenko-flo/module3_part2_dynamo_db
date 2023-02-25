@@ -67,7 +67,7 @@ export class DbService {
 
       return this.getImagesPerPage(imagesPaths, page, PER_PAGE);
     } catch (e) {
-      log(`${e} | class: ${this.constructor.name} | function: getImages.`);
+      throw Error(`${e} | class: ${this.constructor.name} | function: getImages.`);
     }
   }
 
@@ -77,7 +77,7 @@ export class DbService {
       const images = await Image.find({ user: user!.id }).select(['path', 'date']).sort({ date: -1 }).limit(limit);
       return images;
     } catch (e) {
-      log(`${e} | class: ${this.constructor.name} | function: getImagesOfUser.`);
+      throw Error(`${e} | class: ${this.constructor.name} | function: getImagesOfUser.`);
     }
   }
 
@@ -89,7 +89,7 @@ export class DbService {
 
       return this.getImagesPerPage(imagesPaths, page, PER_PAGE);
     } catch (e) {
-      log(`${e} | class: ${this.constructor.name} | function: getImages.`);
+      throw Error(`${e} | class: ${this.constructor.name} | function: getImages.`);
     }
   }
 

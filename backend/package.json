@@ -16,7 +16,7 @@
     "start-services:mongodb": "brew services start mongodb-community@6.0",
     "stop-services:mongodb": "brew services stop mongodb-community@6.0",
     "start:mongodb": "npm run build-defaults:mongodb && npm run add-defaults:mongodb",
-    "start": "concurrently --kill-others-on-fail \"npm run start:mongodb\" \"npm run start:s3-server\" \"npm run deploy:local\"",
+    "start": "concurrently --kill-others-on-fail \"npm run start:s3-server\" \"npm run start:mongodb\" \"npm run deploy:local\"",
     "sls:package:dev": "sls package --stage dev --config serverless.ts",
     "sls:package:test": "sls package --stage test --config serverless.ts",
     "sls:package:prod": "sls package --stage prod --config serverless.ts",

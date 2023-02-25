@@ -10,7 +10,6 @@ export class GalleryFile {
     await mongoose.connect(mongoUrl!);
     const imagesNumber = await Image.countDocuments({}).exec();
     return imagesNumber;
-    console.log(`GalleryFile | getFilesAmountFromDb | imagesNumber: ${imagesNumber}`);
   }
 
   async getFilesAmount(directory: string, counter?: number): Promise<number> {
@@ -31,8 +30,8 @@ export class GalleryFile {
         }
       }
       return counter;
-    } catch (err) {
-      console.error(err);
+    } catch (e) {
+      throw Error(e);
     }
   }
 

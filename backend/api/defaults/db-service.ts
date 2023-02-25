@@ -21,38 +21,34 @@ export class DbService {
       const dir = await opendir(directory);
 
       for await (const file of dir) {
-        try {
-          if (file.name.startsWith('.')) continue;
+        if (file.name.startsWith('.')) continue;
 
-          const filePath = directory + '/' + file.name;
-          const isDir = await this.isDirectory(filePath);
+        const filePath = directory + '/' + file.name;
+        const isDir = await this.isDirectory(filePath);
 
-          if (isDir) {
-            await this.addImagesData(filePath);
-          } else {
-            const buffer = fs.readFileSync(filePath);
-            const metadata = getMetadata(buffer, defaultImagesType);
+        if (isDir) {
+          await this.addImagesData(filePath);
+        } else {
+          const buffer = fs.readFileSync(filePath);
+          const metadata = getMetadata(buffer, defaultImagesType);
 
-            const path = `http://localhost:4569/local-bucket/${file.name}`;
-            const isImage = await Image.findOne({ path: path }).exec();
+          const path = `http://localhost:4569/local-bucket/${file.name}`;
+          const isImage = await Image.findOne({ path: path }).exec();
 
-            if (isImage) return;
-            const data = await readFile(filePath);
-            uploadToS3(data, file.name, 'local-bucket');
-            const date = new Date();
-            const image = new Image({
-              path: path,
-              metadata: metadata,
-              date: date,
-            });
-            await image.save();
-          }
-        } catch (e) {
-          console.log(`${e} | class: ${this.constructor.name} | function: addImagesData.`);
+          if (isImage) return;
+          const data = await readFile(filePath);
+          uploadToS3(data, file.name, 'local-bucket');
+          const date = new Date();
+          const image = new Image({
+            path: path,
+            metadata: metadata,
+            date: date,
+          });
+          await image.save();
         }
       }
     } catch (e) {
-      console.log(`${e} | class: ${this.constructor.name} | function: addImagesData.`);
+      throw Error(`${e} | class: ${this.constructor.name} | function: addImagesData.`);
     }
   }
 
@@ -87,7 +83,7 @@ export class DbService {
       await vkotikov.save();
       console.log(`The user ${vkotikov.email} was saved to DB.`);
     } catch (e) {
-      console.log(`${e} | class: ${this.constructor.name} | function: addDefaultUsers.`);
+      throw Error(`${e} | class: ${this.constructor.name} | function: addDefaultUsers.`);
     }
   }
 
@@ -96,7 +92,7 @@ export class DbService {
       await mongoose.connect(mongoUrl);
       console.log(`Database is running at ${mongoUrl}`);
     } catch (e) {
-      console.log(`${e} | class: ${this.constructor.name} | function: connectToDb.`);
+      throw Error(`${e} | class: ${this.constructor.name} | function: connectToDb.`);
     }
   }
 
@@ -105,7 +101,7 @@ export class DbService {
       await this.addDefaultUsers();
       console.log('Default users have been added to DB.');
     } catch (e) {
-      console.log(`${e} | class: ${this.constructor.name} | function: addDefaultUsersToDB.`);
+      throw Error(`${e} | class: ${this.constructor.name} | function: addDefaultUsersToDB.`);
     }
   }
 
@@ -114,7 +110,7 @@ export class DbService {
       await this.addImagesData(imagesDir);
       console.log('Images have been added to DB.');
     } catch (e) {
-      console.log(`${e} | class: ${this.constructor.name} | function: addImagesDataToDB.`);
+      throw Error(`${e} | class: ${this.constructor.name} | function: addImagesDataToDB.`);
     }
   }
 
