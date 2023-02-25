@@ -47,6 +47,5 @@ export function generatePolicy<C extends APIGatewayAuthorizerResult['context']>(
     },
     context,
   };
-
   return authResponse;
 }

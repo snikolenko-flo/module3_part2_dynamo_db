@@ -10,13 +10,8 @@ const secret = process.env.SECRET;
 
 export const upload = async (event) => {
   try {
-    /**
-     * Create the manager object
-     */
     const manager = new UploadManager();
-    /**
-     * Prepare required data
-     */
+
     const { filename, data, type } = extractFile(event);
     const token = event.headers.authorization;
     const decodedToken = jwt.verify(token, secret);
@@ -24,13 +19,9 @@ export const upload = async (event) => {
 
     const s3filePath = `http://localhost:4569/local-bucket/${filename}`;
     const metadata = getMetadata(data, type);
-    /**
-     * Prepare required services
-     */
+
     const dbService = new DbService();
-    /**
-     * Call the manager's method
-     */
+
     manager.uploadImageToS3(data, filename, 'local-bucket');
     await manager.uploadImageDataToDb(metadata, s3filePath, userEmail, dbService);
     return createResponse(200);

@@ -13,24 +13,15 @@ const mongoUrl = process.env.MONGO_URL;
 
 export const signup: APIGatewayProxyHandlerV2 = async (event) => {
   try {
-    /**
-     * Create the manager object
-     */
     const manager = new SignupManager();
-    /**
-     * Prepare required data
-     */
+
     const { email, password } = JSON.parse(event.body!);
     const salt = crypto.randomBytes(16).toString('hex');
     await mongoose.connect(mongoUrl!);
-    /**
-     * Prepare required services
-     */
+
     const dbService = new DbService();
     const authService = new AuthService();
-    /**
-     * Call the manager's method
-     */
+
     const user = await manager.user.createUser(email, password, salt, dbService);
     log(`User ${user} is created`);
     const token = await manager.response.getToken(user, secret, authService);

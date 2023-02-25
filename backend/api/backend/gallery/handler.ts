@@ -10,13 +10,8 @@ const mongoUrl = process.env.MONGO_URL;
 
 export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
   try {
-    /**
-     * Create the manager object
-     */
     const manager = new GalleryManager();
-    /**
-     * Prepare required data
-     */
+
     const params = event.queryStringParameters;
     const pageNumber = parseInt(params!.page!);
     const pageLimit = parseInt(params!.limit!);
@@ -25,13 +20,8 @@ export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
     if (isNaN(pageNumber)) return createResponse(400, { message: 'The page number should be an integer' });
     if (!isFinite(pageNumber)) return createResponse(400, { message: 'The page number should be a finite integer' });
     await mongoose.connect(mongoUrl!);
-    /**
-     * Prepare required services
-     */
+
     const dbService = new DbService();
-    /**
-     * Call the manager's method
-     */
     const galleryImages = await manager.getGallery(user, pageNumber, pageLimit, dbService);
     return createResponse(200, galleryImages);
   } catch (e) {
