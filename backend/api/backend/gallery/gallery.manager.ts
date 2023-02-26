@@ -17,32 +17,26 @@ export class GalleryManager {
 
     const totalForLimit = await this.file.getTotalPagesForLimit(pageLimit);
 
-    if (pageNumber > total || pageNumber <= 0)
+    if (pageNumber > total || pageNumber <= 0) {
+      log(`The page number ${pageNumber} is ok.`);
       return createResponse(400, { message: `Page should be Ggreater than 0 and less than ${total + 1}` });
-    log(`The page number ${pageNumber} is ok.`);
-
-    if (pageNumber > totalForLimit || pageNumber <= 0)
+    }
+    if (pageNumber > totalForLimit || pageNumber <= 0) {
+      log(`The page number ${pageNumber} is ok.`);
       return createResponse(400, { message: `Page should be Ggreater than 0 and less than ${totalForLimit + 1}` });
-    log(`The page number ${pageNumber} is ok.`);
+    }
 
     let pagesAmount = await this.file.getPagesAmount(pageLimit);
     if (pagesAmount > total) pagesAmount = total;
 
     if (user) {
       log(`A user ${user} was specified.`);
-      const imagesPaths = await dbService.getUserImages(pageNumber, pageLimit, user);
-      log(`Got images for user ${user}.`);
-
-      return {
-        total: pagesAmount,
-        objects: imagesPaths,
-      };
+      const images = await dbService.getUserImages(pageNumber, pageLimit, pagesAmount, user);
+      log(`Got images for the user ${user}.`);
+      return images;
     } else {
-      const imagesPaths = await dbService.getImages(pageNumber, pageLimit);
-      return {
-        total: pagesAmount,
-        objects: imagesPaths,
-      };
+      const images = await dbService.getImages(pageNumber, pageLimit, pagesAmount);
+      return images;
     }
   }
 }

@@ -4,6 +4,7 @@ import { User } from '../models/user.model';
 import { log } from '@helper/logger';
 import mongoose from 'mongoose';
 import { PER_PAGE } from '../data/constants.js';
+import { IResponseWithImages } from '../interfaces/user';
 
 const mongoUrl = process.env.MONGO_URL;
 
@@ -44,7 +45,7 @@ export class DbService {
     return images.length;
   }
 
-  private async getImagesPerPage(images: string[], page: number, perPage: number): Promise<string[]> {
+  private getImagesPerPage(images: string[], page: number, perPage: number): string[] {
     const endIndex = page * perPage;
     const start = endIndex - perPage;
     return images.slice(start, endIndex);
@@ -58,14 +59,19 @@ export class DbService {
     return images.map((item) => item.path);
   }
 
-  async getImages(page: number, limit: number): Promise<string[]> {
+  async getImages(page: number, limit: number, pagesAmount: number): Promise<IResponseWithImages> {
     try {
-      const images = await Image.find({}).select(['path', 'date']).sort({date: -1}).limit(limit);
+      const images = await Image.find({}).select(['path', 'date']).sort({ date: -1 }).limit(limit);
 
       const sortedImages = this.sortImagesFromOldToNew(images);
       const imagesPaths = this.retrieveImagesPaths(sortedImages);
 
-      return this.getImagesPerPage(imagesPaths, page, PER_PAGE);
+      const paths = this.getImagesPerPage(imagesPaths, page, PER_PAGE);
+
+      return {
+        total: pagesAmount,
+        objects: paths,
+      };
     } catch (e) {
       throw Error(`${e} | class: ${this.constructor.name} | function: getImages.`);
     }
@@ -81,13 +87,23 @@ export class DbService {
     }
   }
 
-  async getUserImages(page: number, limit: number, userEmail?: string): Promise<string[]> {
+  async getUserImages(
+    page: number,
+    limit: number,
+    pagesAmount: number,
+    userEmail?: string
+  ): Promise<IResponseWithImages> {
     try {
       const images = await this.getImagesOfUser(userEmail!, limit);
       const sortedImages = this.sortImagesFromOldToNew(images);
       const imagesPaths = this.retrieveImagesPaths(sortedImages);
 
-      return this.getImagesPerPage(imagesPaths, page, PER_PAGE);
+      const paths = this.getImagesPerPage(imagesPaths, page, PER_PAGE);
+
+      return {
+        total: pagesAmount,
+        objects: paths,
+      };
     } catch (e) {
       throw Error(`${e} | class: ${this.constructor.name} | function: getImages.`);
     }

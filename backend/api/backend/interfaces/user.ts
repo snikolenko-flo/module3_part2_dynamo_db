@@ -6,3 +6,8 @@ export interface IUser extends Document {
   salt: string;
   images?: Array<Schema.Types.ObjectId>;
 }
+
+export interface IResponseWithImages {
+  total: number;
+  objects: string[];
+}
