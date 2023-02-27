@@ -1,6 +1,6 @@
 import mongoose from 'mongoose';
 import { PER_PAGE } from '../data/constants.js';
-import { opendir, stat } from 'node:fs/promises';
+import { opendir, stat } from 'fs/promises';
 import { Image } from '../models/image.model';
 
 const mongoUrl = process.env.MONGO_URL;

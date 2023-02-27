@@ -1,5 +1,5 @@
 import mongoose, { Schema } from 'mongoose';
-import crypto from 'node:crypto';
+import crypto from 'crypto';
 import util from 'util';
 
 const UserSchema: Schema = new Schema({

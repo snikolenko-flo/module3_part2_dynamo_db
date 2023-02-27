@@ -1,10 +1,9 @@
-import { opendir, stat } from 'node:fs/promises';
+import { opendir, stat, readFile } from 'fs/promises';
 import { uploadToS3 } from '../backend/services/s3.service';
 import { Image } from '../backend/models/image.model';
 import { User } from '../backend/models/user.model';
 import mongoose from 'mongoose';
-import * as crypto from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import * as crypto from 'crypto';
 import fs from 'fs';
 import { getMetadata } from '../backend/services/file.service';
 
