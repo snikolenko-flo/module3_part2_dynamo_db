@@ -1,3 +1,4 @@
+import { errorHandler } from '@helper/http-api/error-handler';
 import { createResponse } from '@helper/http-api/response';
 import { log } from '@helper/logger';
 import { GalleryFile } from './gallery.file.js';
@@ -19,12 +20,12 @@ export class GalleryManager {
     const totalForLimit = await this.file.getTotalPagesForLimit(pageLimit);
 
     if (pageNumber > total || pageNumber <= 0) {
-      log(`The page number ${pageNumber} is ok.`);
-      return createResponse(400, { message: `Page should be Ggreater than 0 and less than ${total + 1}` });
+      log(`The page number ${pageNumber} is wrong.`);
+      return createResponse(400, { message: `Page should be Greater than 0 and less than ${total + 1}` });
     }
     if (pageNumber > totalForLimit || pageNumber <= 0) {
-      log(`The page number ${pageNumber} is ok.`);
-      return createResponse(400, { message: `Page should be Ggreater than 0 and less than ${totalForLimit + 1}` });
+      log(`The page number ${pageNumber} is wrong.`);
+      return createResponse(400, { message: `Page should be Greater than 0 and less than ${totalForLimit + 1}` });
     }
 
     let pagesAmount = await this.file.getPagesAmount(pageLimit);
@@ -34,10 +35,12 @@ export class GalleryManager {
       log(`A user ${user} was specified.`);
       const images = await dbService.getUserImages(pageNumber, pageLimit, pagesAmount, user);
       log(`Got images for the user ${user}.`);
-      return images;
+      //return images;
+      return createResponse(200, images);
     } else {
       const images = await dbService.getImages(pageNumber, pageLimit, pagesAmount);
-      return images;
+      //return images;
+      return createResponse(200, images);
     }
   }
 }
