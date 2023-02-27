@@ -1,6 +1,6 @@
 import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
-export const uploadToS3 = (data, filename, bucket) => {
+export const uploadToS3 = (data: Buffer, filename: string, bucket: string): void => {
   const client = new S3Client({
     forcePathStyle: true,
     credentials: {

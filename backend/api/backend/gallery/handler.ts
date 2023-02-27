@@ -22,8 +22,8 @@ export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
     await mongoose.connect(mongoUrl!);
 
     const dbService = new DbService();
-    const galleryImages = await manager.getGallery(user, pageNumber, pageLimit, dbService);
-    return createResponse(200, galleryImages);
+    const images = await manager.getGallery(user!, pageNumber, pageLimit, dbService);
+    return createResponse(200, images);
   } catch (e) {
     return errorHandler(e);
   }

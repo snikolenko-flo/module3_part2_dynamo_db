@@ -6,7 +6,7 @@ import { Image } from '../models/image.model';
 const mongoUrl = process.env.MONGO_URL;
 
 export class GalleryFile {
-  async getFilesAmountFromDb() {
+  async getFilesAmountFromDb(): Promise<number> {
     await mongoose.connect(mongoUrl!);
     const imagesNumber = await Image.countDocuments({}).exec();
     return imagesNumber;

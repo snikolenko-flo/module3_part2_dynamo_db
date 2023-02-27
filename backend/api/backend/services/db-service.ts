@@ -4,19 +4,19 @@ import { User } from '../models/user.model';
 import { log } from '@helper/logger';
 import mongoose from 'mongoose';
 import { PER_PAGE } from '../data/constants.js';
-import { IResponseWithImages } from '../interfaces/user';
+import { IResponseWithImages } from '../interfaces/response';
+import { Images } from '../interfaces/image';
 
 const mongoUrl = process.env.MONGO_URL;
 
 export class DbService {
-  async uploadImageData(fileMetadata, filePath: string, userEmail: string): Promise<void> {
+  async uploadImageData(fileMetadata: object, filePath: string, userEmail: string): Promise<void> {
     await mongoose.connect(mongoUrl!);
 
     const isImage = await Image.findOne({ path: filePath }).exec();
     if (isImage) return;
 
     const user = await User.findOne({ email: userEmail }).exec();
-
     const date = new Date();
 
     const image = new Image({
@@ -30,8 +30,8 @@ export class DbService {
     log(`The image ${filePath} was saved`);
   }
 
-  async findUser(email: string) {
-    const user = await User.findOne({ email: email }).select(['email', 'password', 'salt']).exec();
+  async findUser(email: string): Promise<IUser> {
+    const user = (await User.findOne({ email: email }).select(['email', 'password', 'salt']).exec()) as IUser;
     return user;
   }
 
@@ -51,18 +51,20 @@ export class DbService {
     return images.slice(start, endIndex);
   }
 
-  private sortImagesFromOldToNew(images): object[] {
-    return images.sort((a, b) => a.date - b.date);
+  private sortImagesFromOldToNew(images: Images[]): Images[] {
+    return images.sort((a, b) => Number(a.date) - Number(b.date));
   }
 
-  private retrieveImagesPaths(images): string[] {
+  private retrieveImagesPaths(images: Images[]): string[] {
     return images.map((item) => item.path);
   }
 
   async getImages(page: number, limit: number, pagesAmount: number): Promise<IResponseWithImages> {
     try {
-      const images = await Image.find({}).select(['path', 'date']).sort({ date: -1 }).limit(limit);
-
+      const images: Images[] = (await Image.find({})
+        .select(['path', 'date'])
+        .sort({ date: -1 })
+        .limit(limit)) as Images[];
       const sortedImages = this.sortImagesFromOldToNew(images);
       const imagesPaths = this.retrieveImagesPaths(sortedImages);
 
@@ -77,10 +79,13 @@ export class DbService {
     }
   }
 
-  private async getImagesOfUser(userEmail: string, limit: number): Promise<object[]> {
+  private async getImagesOfUser(userEmail: string, limit: number): Promise<Images[]> {
     try {
       const user = await User.findOne({ email: userEmail }).exec();
-      const images = await Image.find({ user: user!.id }).select(['path', 'date']).sort({ date: -1 }).limit(limit);
+      const images: Images[] = (await Image.find({ user: user!.id })
+        .select(['path', 'date'])
+        .sort({ date: -1 })
+        .limit(limit)) as Images[];
       return images;
     } catch (e) {
       throw Error(`${e} | class: ${this.constructor.name} | function: getImagesOfUser.`);

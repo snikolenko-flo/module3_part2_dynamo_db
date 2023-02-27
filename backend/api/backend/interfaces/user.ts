@@ -5,9 +5,5 @@ export interface IUser extends Document {
   password: string;
   salt: string;
   images?: Array<Schema.Types.ObjectId>;
-}
-
-export interface IResponseWithImages {
-  total: number;
-  objects: string[];
+  isValidPassword: (password: string) => Promise<boolean>;
 }

@@ -1,6 +1,7 @@
 import { createResponse } from '@helper/http-api/response';
 import { log } from '@helper/logger';
 import { GalleryFile } from './gallery.file.js';
+import { DbService } from '../services/db-service';
 
 export class GalleryManager {
   file: GalleryFile;
@@ -8,7 +9,7 @@ export class GalleryManager {
   constructor() {
     this.file = new GalleryFile();
   }
-  async getGallery(user, pageNumber, pageLimit, dbService) {
+  async getGallery(user: string, pageNumber: number, pageLimit: number, dbService: DbService) {
     let total = await this.file.getTotalPages();
     if (user) {
       const userImagesNumber = await dbService.getUserImagesNumber(user, pageLimit);

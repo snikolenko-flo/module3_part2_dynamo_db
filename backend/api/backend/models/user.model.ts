@@ -15,7 +15,7 @@ UserSchema.pre('save', async function (next) {
   next();
 });
 
-UserSchema.methods.isValidPassword = async function (password) {
+UserSchema.methods.isValidPassword = async function (password): Promise<boolean> {
   const crypt = util.promisify(crypto.pbkdf2);
   const hash = await crypt(password, this.salt, 1000, 64, 'sha512');
   return this.password === hash.toString('hex');

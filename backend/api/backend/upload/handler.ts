@@ -1,6 +1,8 @@
 import { errorHandler } from '@helper/http-api/error-handler';
 import { createResponse } from '@helper/http-api/response';
+import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import parseMultipart from 'parse-multipart';
+import { IFileData } from '../interfaces/file';
 import { DbService } from '../services/db-service';
 import jwt from 'jsonwebtoken';
 import { getMetadata } from '../services/file.service';
@@ -8,7 +10,7 @@ import { UploadManager } from './upload.manager';
 
 const secret = process.env.SECRET;
 
-export const upload = async (event) => {
+export const upload: APIGatewayProxyHandlerV2 = async (event) => {
   try {
     const manager = new UploadManager();
 
@@ -30,7 +32,7 @@ export const upload = async (event) => {
   }
 };
 
-function extractFile(event) {
+function extractFile(event): IFileData {
   const boundary = parseMultipart.getBoundary(event.headers['content-type']);
   const parts = parseMultipart.Parse(Buffer.from(event.body, 'binary'), boundary);
   const [{ filename, data, type }] = parts;

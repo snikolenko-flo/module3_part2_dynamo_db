@@ -1,7 +1,8 @@
+import { IUser } from '../interfaces/user';
 import { DbService } from '../services/db-service';
 
 export class SignupUser {
-  async createUser(email: string, password: string, salt: string, dbService: DbService) {
+  async createUser(email: string, password: string, salt: string, dbService: DbService): Promise<IUser> {
     try {
       const user = await dbService.createUser(email, password, salt);
       return user;
