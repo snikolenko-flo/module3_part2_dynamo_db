@@ -1,16 +1,24 @@
-import { opendir, stat, readFile } from 'fs/promises';
-import { GalleryFile } from '../backend/gallery/gallery.file';
+import { opendir, readFile } from 'fs/promises';
 import { uploadToS3 } from '../backend/services/s3.service';
 import { Image } from '../backend/models/image.model';
 import { User } from '../backend/models/user.model';
-import mongoose from 'mongoose';
 import * as crypto from 'crypto';
 import { FileService } from '../backend/services/file.service';
+import mongoose from 'mongoose';
 
 const defaultImagesType = 'image/jpeg';
 const fileService = new FileService();
+const pathToBucket = 'http://localhost:4569/local-bucket';
 
 export class DbService {
+  async addImage(path: string, metadata: object): Promise<void> {
+    const image = new Image({
+      path: path,
+      metadata: metadata,
+      date: new Date(),
+    });
+    await image.save();
+  }
   async addImagesData(directory: string): Promise<void> {
     try {
       const dir = await opendir(directory);
@@ -18,28 +26,19 @@ export class DbService {
       for await (const file of dir) {
         if (file.name.startsWith('.')) continue;
 
-        const filePath = directory + '/' + file.name;
-        const isDir = await fileService.isDirectory(filePath);
+        const isDir = await fileService.isDirectory(directory + '/' + file.name);
 
         if (isDir) {
-          await this.addImagesData(filePath);
+          await this.addImagesData(directory + '/' + file.name);
         } else {
-          const buffer = await readFile(filePath);
+          const buffer = await readFile(directory + '/' + file.name);
           const metadata = fileService.getMetadata(buffer, defaultImagesType);
 
-          const path = `http://localhost:4569/local-bucket/${file.name}`;
-          const isImage = await Image.findOne({ path: path }).exec();
-
+          const isImage = await Image.findOne({ path: `${pathToBucket}/${file.name}` }).exec();
           if (isImage) return;
-          const data = await readFile(filePath);
-          uploadToS3(data, file.name, 'local-bucket');
-          const date = new Date();
-          const image = new Image({
-            path: path,
-            metadata: metadata,
-            date: date,
-          });
-          await image.save();
+
+          uploadToS3(buffer, file.name, 'local-bucket');
+          await this.addImage(`${pathToBucket}/${file.name}`, metadata);
         }
       }
     } catch (e) {
