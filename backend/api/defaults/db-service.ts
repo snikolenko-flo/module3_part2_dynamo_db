@@ -1,20 +1,16 @@
 import { opendir, stat, readFile } from 'fs/promises';
+import { GalleryFile } from '../backend/gallery/gallery.file';
 import { uploadToS3 } from '../backend/services/s3.service';
 import { Image } from '../backend/models/image.model';
 import { User } from '../backend/models/user.model';
 import mongoose from 'mongoose';
 import * as crypto from 'crypto';
-import fs from 'fs';
-import { getMetadata } from '../backend/services/file.service';
+import { FileService } from '../backend/services/file.service';
 
 const defaultImagesType = 'image/jpeg';
+const fileService = new FileService();
 
 export class DbService {
-  private async isDirectory(filePath: string): Promise<boolean> {
-    const isDir = await stat(filePath);
-    return isDir.isDirectory();
-  }
-
   async addImagesData(directory: string): Promise<void> {
     try {
       const dir = await opendir(directory);
@@ -23,13 +19,13 @@ export class DbService {
         if (file.name.startsWith('.')) continue;
 
         const filePath = directory + '/' + file.name;
-        const isDir = await this.isDirectory(filePath);
+        const isDir = await fileService.isDirectory(filePath);
 
         if (isDir) {
           await this.addImagesData(filePath);
         } else {
-          const buffer = fs.readFileSync(filePath);
-          const metadata = getMetadata(buffer, defaultImagesType);
+          const buffer = await readFile(filePath);
+          const metadata = fileService.getMetadata(buffer, defaultImagesType);
 
           const path = `http://localhost:4569/local-bucket/${file.name}`;
           const isImage = await Image.findOne({ path: path }).exec();

@@ -5,10 +5,11 @@ import parseMultipart from 'parse-multipart';
 import { IFileData } from '../interfaces/file';
 import { DbService } from '../services/db-service';
 import jwt from 'jsonwebtoken';
-import { getMetadata } from '../services/file.service';
 import { UploadManager } from './upload.manager';
+import { FileService } from '../services/file.service';
 
 const secret = process.env.SECRET;
+const fileService = new FileService();
 
 export const upload: APIGatewayProxyHandlerV2 = async (event) => {
   try {
@@ -20,7 +21,7 @@ export const upload: APIGatewayProxyHandlerV2 = async (event) => {
     const userEmail = decodedToken.user.email;
 
     const s3filePath = `http://localhost:4569/local-bucket/${filename}`;
-    const metadata = getMetadata(data, type);
+    const metadata = fileService.getMetadata(data, type);
 
     const dbService = new DbService();
 
