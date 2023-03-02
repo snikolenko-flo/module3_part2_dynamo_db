@@ -11,30 +11,18 @@ const fileService = new FileService();
 const pathToBucket = 'http://localhost:4569/local-bucket';
 
 export class DbService {
-  async addImage(path: string, metadata: object): Promise<void> {
-    const image = new Image({
-      path: path,
-      metadata: metadata,
-      date: new Date(),
-    });
-    await image.save();
-  }
-  async addImagesData(directory: string): Promise<void> {
+  private async addImagesData(directory: string): Promise<void> {
     try {
       const dir = await opendir(directory);
-
       for await (const file of dir) {
         if (file.name.startsWith('.')) continue;
-
         const isDir = await fileService.isDirectory(directory + '/' + file.name);
 
         if (isDir) {
           await this.addImagesData(directory + '/' + file.name);
         } else {
-
-          const isImage = await Image.findOne({ path: `${pathToBucket}/${file.name}` }).exec();
+          const isImage = await this.isFileInDb(file.name);
           if (isImage) return;
-
           await this.saveFile(directory, file.name);
         }
       }
@@ -43,7 +31,16 @@ export class DbService {
     }
   }
 
-  async saveFile(directory: string, fileName: string): Promise<void> {
+  private async addImage(path: string, metadata: object): Promise<void> {
+    const image = new Image({
+      path: path,
+      metadata: metadata,
+      date: new Date(),
+    });
+    await image.save();
+  }
+
+  private async saveFile(directory: string, fileName: string): Promise<void> {
     const buffer = await readFile(directory + '/' + fileName);
     const metadata = fileService.getMetadata(buffer, defaultImagesType);
 
@@ -51,8 +48,12 @@ export class DbService {
     await this.addImage(`${pathToBucket}/${fileName}`, metadata);
   }
 
+  private async isFileInDb(fileName: string) {
+    const isImage = await Image.findOne({ path: `${pathToBucket}/${fileName}` }).exec();
+    return isImage;
+  }
 
-  async addDefaultUsers(): Promise<void> {
+  private async addDefaultUsers(): Promise<void> {
     const defaultUsersArray = ['asergeev@flo.team', 'tpupkin@flo.team', 'vkotikov@flo.team'];
 
     try {
@@ -62,7 +63,7 @@ export class DbService {
       const asergeev = new User({
         email: 'asergeev@flo.team',
         password: 'jgF5tn4F',
-        salt: crypto.randomBytes(16).toString('hex')
+        salt: crypto.randomBytes(16).toString('hex'),
       });
       await asergeev.save();
       console.log(`The user ${asergeev.email} was saved to DB.`);
@@ -70,7 +71,7 @@ export class DbService {
       const tpupkin = new User({
         email: 'tpupkin@flo.team',
         password: 'tpupkin@flo.team',
-        salt: crypto.randomBytes(16).toString('hex')
+        salt: crypto.randomBytes(16).toString('hex'),
       });
       await tpupkin.save();
       console.log(`The user ${tpupkin.email} was saved to DB.`);
@@ -78,7 +79,7 @@ export class DbService {
       const vkotikov = new User({
         email: 'vkotikov@flo.team',
         password: 'po3FGas8',
-        salt: crypto.randomBytes(16).toString('hex')
+        salt: crypto.randomBytes(16).toString('hex'),
       });
       await vkotikov.save();
       console.log(`The user ${vkotikov.email} was saved to DB.`);
