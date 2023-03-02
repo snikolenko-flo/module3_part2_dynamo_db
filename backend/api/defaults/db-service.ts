@@ -31,20 +31,26 @@ export class DbService {
         if (isDir) {
           await this.addImagesData(directory + '/' + file.name);
         } else {
-          const buffer = await readFile(directory + '/' + file.name);
-          const metadata = fileService.getMetadata(buffer, defaultImagesType);
 
           const isImage = await Image.findOne({ path: `${pathToBucket}/${file.name}` }).exec();
           if (isImage) return;
 
-          uploadToS3(buffer, file.name, 'local-bucket');
-          await this.addImage(`${pathToBucket}/${file.name}`, metadata);
+          await this.saveFile(directory, file.name);
         }
       }
     } catch (e) {
       throw Error(`${e} | class: ${this.constructor.name} | function: addImagesData.`);
     }
   }
+
+  async saveFile(directory: string, fileName: string): Promise<void> {
+    const buffer = await readFile(directory + '/' + fileName);
+    const metadata = fileService.getMetadata(buffer, defaultImagesType);
+
+    uploadToS3(buffer, fileName, 'local-bucket');
+    await this.addImage(`${pathToBucket}/${fileName}`, metadata);
+  }
+
 
   async addDefaultUsers(): Promise<void> {
     const defaultUsersArray = ['asergeev@flo.team', 'tpupkin@flo.team', 'vkotikov@flo.team'];
