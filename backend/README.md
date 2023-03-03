@@ -13,8 +13,11 @@ Server sends back images urls. The app wrap them into html and displays to the u
 
 # Launching
 
-Run the command `npm run start` from the project root directory.  
-In a separate terminal run the command `npm run build:front`.  
+Go to the backend directory that is located in the root.  
+Run the command `npm run start`.
+
+Go to the frontend directory that is located in the root.
+Run the command `npm run build:front`.  
 Open the frontend folder in VS Code editor and run built-in live server for the login page located in the path:
 `./frontend/build/html/login.html`
 
