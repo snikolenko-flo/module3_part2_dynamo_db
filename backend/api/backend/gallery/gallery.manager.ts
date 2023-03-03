@@ -9,26 +9,22 @@ export class GalleryManager {
   constructor() {
     this.file = new GalleryFile();
   }
+
   async getGallery(user: string, pageNumber: number, pageLimit: number, dbService: DbService) {
-    let total = await this.file.getTotalPages();
+    let pagesAmount;
     if (user) {
       const userImagesNumber = await dbService.getUserImagesNumber(user, pageLimit);
-      total = await this.file.getUserPagesNumber(userImagesNumber);
+      pagesAmount = this.file.getNumberOfPagesForUser(userImagesNumber);
+    } else {
+      pagesAmount = await this.file.getNumberOfPages(pageLimit);
     }
 
-    const totalForLimit = await this.file.getTotalPagesForLimit(pageLimit);
-
-    if (pageNumber > total || pageNumber <= 0) {
+    if (pageNumber > pagesAmount || pageNumber <= 0) {
       log(`The page number ${pageNumber} is wrong.`);
-      return createResponse(400, { message: `Page should be Greater than 0 and less than ${total + 1}` });
+      return createResponse(400, {
+        message: `Page should be Greater than 0 and less than ${pagesAmount + 1}`,
+      });
     }
-    if (pageNumber > totalForLimit || pageNumber <= 0) {
-      log(`The page number ${pageNumber} is wrong.`);
-      return createResponse(400, { message: `Page should be Greater than 0 and less than ${totalForLimit + 1}` });
-    }
-
-    let pagesAmount = await this.file.getTotalPagesForLimit(pageLimit);
-    if (pagesAmount > total) pagesAmount = total;
 
     if (user) {
       log(`A user ${user} was specified.`);

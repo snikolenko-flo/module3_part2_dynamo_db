@@ -40,32 +40,26 @@ export class GalleryFile {
     return isDir.isDirectory();
   }
 
-  // Returns number of pages for all images.
-  async getTotalPages(): Promise<number> {
-    const filesAmount = await this.getFilesAmountFromDb();
-    const onePage = 1;
-    if (filesAmount <= PER_PAGE) return onePage;
+  async getNumberOfPages(limit: number): Promise<number> {
+    const total = await this.getFilesAmountFromDb();
+    const totalPages = this.calculatePagesNumber(total);
 
-    const remainder = filesAmount % PER_PAGE;
-    if (remainder === 0) return filesAmount / PER_PAGE;
-
-    return Math.trunc(filesAmount / PER_PAGE) + onePage;
+    if (limit) {
+      const pagesAmount = this.calculatePagesNumber(limit);
+      if (pagesAmount > totalPages) {
+        return totalPages;
+      } else {
+        return pagesAmount;
+      }
+    }
+    return totalPages;
   }
 
-  async getUserPagesNumber(filesNumber: number): Promise<number> {
-    const onePage = 1;
-    if (filesNumber <= PER_PAGE) return onePage;
-
-    const remainder = filesNumber % PER_PAGE;
-    if (remainder === 0) return filesNumber / PER_PAGE;
-
-    return Math.trunc(filesNumber / PER_PAGE) + onePage;
+  getNumberOfPagesForUser(filesNumber: number): number {
+    return this.calculatePagesNumber(filesNumber);
   }
 
-  // Returns number of pages according to the specified limit.
-  async getTotalPagesForLimit(limit: number): Promise<number> {
-    const filesAmount = limit;
-
+  private calculatePagesNumber(filesAmount) {
     const onePage = 1;
     if (filesAmount <= PER_PAGE) return onePage;
 
