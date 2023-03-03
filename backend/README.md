@@ -188,6 +188,7 @@ It is a skeleton for your AWS + Serverless applications.
     - types.ts - Types for Serverless configurations
     - utils.ts - Helper for Serverless configurations
 - frontend - Contains frontend logic
+
   - auth - This module manages login and signup
   - css - Contains css files
   - data - Contains additional data
@@ -379,7 +380,6 @@ In other cases you should check [this page](https://docs.aws.amazon.com/apigatew
 
 Probably, you use lambda authorizer for HTTP API. Serverless offline plugin does not support for that yet. Check the plugin repo for any updates.
 
-
 ### What to use: `env.yml` or [params](https://www.serverless.com/framework/docs/guides/parameters#stage-parameters)?
 
 With [Serverless stage parameters](https://www.serverless.com/framework/docs/guides/parameters#stage-parameters) you can pass different value of a parameter depending on the stage to the serverless config. You can use it as values source for env variables for lambda like this:
@@ -425,6 +425,3 @@ Here is some recommendations you may follow in you project:
 - Use the stage parameters to substitute values in the serverless config. Those parameters will not be passed to lambda and only visible in the serverless config.
 - Use `env.yml` to store encrypted env variables / encrypted parameters / any env variable or parameter. Keep in mind that all variables/parameters in the yml file will be passed to each lambda as env variables.
 - Use the stage parameters as values source for lambda env variables if you have only a few variables.
-
-
-

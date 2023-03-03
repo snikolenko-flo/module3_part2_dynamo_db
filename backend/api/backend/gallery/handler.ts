@@ -40,4 +40,4 @@ export const getImagesLimit: APIGatewayProxyHandlerV2 = async (event) => {
   } catch (e) {
     return errorHandler(e);
   }
-}
+};

@@ -106,9 +106,4 @@ const masterConfig: AWS = {
   ],
 };
 
-module.exports = joinParts(masterConfig, [
-  getGalleryConfig,
-  getLoginConfig,
-  getSignupConfig,
-  uploadConfig,
-]);
+module.exports = joinParts(masterConfig, [getGalleryConfig, getLoginConfig, getSignupConfig, uploadConfig]);

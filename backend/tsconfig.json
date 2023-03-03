@@ -21,6 +21,5 @@
       "@interfaces/*": ["./interfaces/*"]
     }
   },
-  "exclude": [
-    "node_modules", "coverage", ".build", ".esbuild", ".git"]
+  "exclude": ["node_modules", "coverage", ".build", ".esbuild", ".git"]
 }
