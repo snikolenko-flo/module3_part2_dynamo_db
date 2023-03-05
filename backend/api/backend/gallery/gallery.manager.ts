@@ -1,4 +1,5 @@
 import { createResponse } from '@helper/http-api/response';
+import { APIGatewayProxyResult } from 'aws-lambda/trigger/api-gateway-proxy';
 import { GalleryFile } from './gallery.file.js';
 import { DbService } from '../services/db-service';
 
@@ -9,7 +10,12 @@ export class GalleryManager {
     this.file = new GalleryFile();
   }
 
-  async getGallery(user: string, pageNumber: number, pageLimit: number, dbService: DbService) {
+  async getGallery(
+    user: string,
+    pageNumber: number,
+    pageLimit: number,
+    dbService: DbService
+  ): Promise<APIGatewayProxyResult> {
     const pagesAmount = await this.file.getNumberOfPages(pageLimit, dbService, user);
     const isValid = this.file.isPagesAmountValid(pagesAmount, pageNumber);
     if (!isValid) {
