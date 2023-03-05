@@ -1,4 +1,3 @@
-import { createResponse } from '@helper/http-api/response';
 import { log } from '@helper/logger';
 import mongoose from 'mongoose';
 import { PER_PAGE } from '../data/constants.js';

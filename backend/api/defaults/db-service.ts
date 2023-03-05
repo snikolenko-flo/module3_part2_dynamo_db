@@ -1,4 +1,5 @@
 import { opendir, readFile } from 'fs/promises';
+import { Images } from '../backend/interfaces/image';
 import { uploadToS3 } from '../backend/services/s3.service';
 import { Image } from '../backend/models/image.model';
 import { User } from '../backend/models/user.model';
@@ -16,10 +17,11 @@ export class DbService {
       const dir = await opendir(directory);
       for await (const file of dir) {
         if (file.name.startsWith('.')) continue;
-        const isDir = await fileService.isDirectory(directory + '/' + file.name);
+        const fullPath = this.createFullPath(directory, file.name);
+        const isDir = await fileService.isDirectory(fullPath);
 
         if (isDir) {
-          await this.addImagesData(directory + '/' + file.name);
+          await this.addImagesData(fullPath);
         } else {
           const isImage = await this.isFileInDb(file.name);
           if (isImage) return;
@@ -31,6 +33,9 @@ export class DbService {
     }
   }
 
+  private createFullPath(directory: string, filename: string): string {
+    return directory + '/' + filename;
+  }
   private async addImage(path: string, metadata: object): Promise<void> {
     const image = new Image({
       path: path,
@@ -48,9 +53,8 @@ export class DbService {
     await this.addImage(`${pathToBucket}/${fileName}`, metadata);
   }
 
-  private async isFileInDb(fileName: string) {
-    const isImage = await Image.findOne({ path: `${pathToBucket}/${fileName}` }).exec();
-    return isImage;
+  private async isFileInDb(fileName: string): Promise<Images> {
+    return await Image.findOne({ path: `${pathToBucket}/${fileName}` }).exec();
   }
 
   private async addDefaultUsers(): Promise<void> {
