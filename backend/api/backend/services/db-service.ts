@@ -31,13 +31,11 @@ export class DbService {
   }
 
   async findUser(email: string): Promise<IUser> {
-    const user = (await User.findOne({ email: email }).select(['email', 'password', 'salt']).exec()) as IUser;
-    return user;
+    return (await User.findOne({ email: email }).select(['email', 'password', 'salt']).exec()) as IUser;
   }
 
   async getImagesNumber(): Promise<number> {
-    const imagesNumber = await Image.count();
-    return imagesNumber;
+    return Image.count();
   }
 
   async getUserImagesNumber(userEmail: string, limit: number): Promise<number> {
@@ -115,7 +113,6 @@ export class DbService {
   }
 
   async createUser(email: string, password: string, salt: string): Promise<IUser> {
-    const user = (await User.create({ email, password, salt })) as IUser;
-    return user;
+    return (await User.create({ email, password, salt })) as IUser;
   }
 }

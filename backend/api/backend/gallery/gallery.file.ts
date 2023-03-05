@@ -12,8 +12,7 @@ const mongoUrl = process.env.MONGO_URL;
 export class GalleryFile {
   async getFilesAmountFromDb(): Promise<number> {
     await mongoose.connect(mongoUrl!);
-    const imagesNumber = await Image.countDocuments({}).exec();
-    return imagesNumber;
+    return await Image.countDocuments({}).exec();
   }
 
   async getFilesAmount(directory: string, counter?: number): Promise<number> {
