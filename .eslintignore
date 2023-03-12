@@ -1,6 +1,0 @@
-node_modules
-.webpack
-.serverless
-.build
-.scannerwork
-webpack.config.js

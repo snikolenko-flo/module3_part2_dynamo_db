@@ -2,7 +2,7 @@
 node_modules
 offline
 jspm_packages
-.idea/
+../.idea/
 .vscode/
 .webpack/
 **/.webpack
@@ -14,7 +14,6 @@ jspm_packages
 .build/
 kms_key.yml
 .env
-env.yml
 **/.env
 **/api/**.js
 .nyc_output/
@@ -22,3 +21,8 @@ typings/
 documentation/
 coverage/
 .esbuild/
+.DS_Store
+build/
+logs
+../.DS_Store/
+.idea
