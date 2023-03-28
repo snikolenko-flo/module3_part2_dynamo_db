@@ -9,7 +9,7 @@ import mongoose from 'mongoose';
 
 const defaultImagesType = 'image/jpeg';
 const fileService = new FileService();
-const pathToBucket = 'http://localhost:4569/local-bucket';
+const pathToBucket = 'https://stanislav-flo-test-bucket.s3.ap-northeast-1.amazonaws.com/local-bucket';
 
 export class DbService {
   private async addImagesData(directory: string): Promise<void> {
