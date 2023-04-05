@@ -9,7 +9,9 @@ import mongoose from 'mongoose';
 
 const defaultImagesType = 'image/jpeg';
 const fileService = new FileService();
-const pathToBucket = 'https://stanislav-flo-test-bucket.s3.ap-northeast-1.amazonaws.com/local-bucket';
+const bucketEndpoint = 'https://stanislav-flo-test-bucket.s3.ap-northeast-1.amazonaws.com';
+const bucket = 's3-bucket';
+const pathToBucket = `${bucketEndpoint}/${bucket}`;
 
 export class DbService {
   private async addImagesData(directory: string): Promise<void> {
@@ -49,7 +51,7 @@ export class DbService {
     const buffer = await readFile(directory + '/' + fileName);
     const metadata = fileService.getMetadata(buffer, defaultImagesType);
 
-    uploadToS3(buffer, fileName, 'local-bucket');
+    uploadToS3(buffer, fileName, bucket);
     await this.addImage(`${pathToBucket}/${fileName}`, metadata);
   }
 

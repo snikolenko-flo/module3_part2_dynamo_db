@@ -10,6 +10,9 @@ import { FileService } from '../services/file.service';
 
 const secret = process.env.SECRET;
 const fileService = new FileService();
+const bucketEndpoint = 'https://stanislav-flo-test-bucket.s3.ap-northeast-1.amazonaws.com';
+const bucket = 's3-bucket';
+const pathToBucket = `${bucketEndpoint}/${bucket}`;
 
 export const upload: APIGatewayProxyHandlerV2 = async (event) => {
   try {
@@ -20,12 +23,12 @@ export const upload: APIGatewayProxyHandlerV2 = async (event) => {
     const decodedToken = jwt.verify(token, secret);
     const userEmail = decodedToken.user.email;
 
-    const s3filePath = `http://localhost:4569/local-bucket/${filename}`;
+    const s3filePath = `${pathToBucket}/${filename}`;
     const metadata = fileService.getMetadata(data, type);
 
     const dbService = new DbService();
 
-    manager.uploadImageToS3(data, filename, 'local-bucket');
+    manager.uploadImageToS3(data, filename, bucket);
     await manager.uploadImageDataToDb(metadata, s3filePath, userEmail, dbService);
     return createResponse(200);
   } catch (e) {
