@@ -41,6 +41,29 @@ async function getImagesFromDynamoDB(limit: number) {
   }
 }
 
+export async function getFilesAmountFromDynamoDB() {
+  const params = {
+    TableName: 'module3_part2',
+    KeyConditionExpression: '#pk = :pkval',
+    ExpressionAttributeNames: {
+      '#pk': 'email',
+    },
+    ExpressionAttributeValues: {
+      ':pkval': { S: 'admin@flo.team' },
+    },
+    Select: 'COUNT',
+  };
+
+  const queryCommand = new QueryCommand(params);
+
+  try {
+    const data = await client.send(queryCommand);
+    return data.Count;
+  } catch (err) {
+    console.error(err);
+  }
+}
+
 function removeUsersFromResponse(dynamoArray) {
   return dynamoArray.filter(function (item) {
     return String(item.path.S) !== 'default';

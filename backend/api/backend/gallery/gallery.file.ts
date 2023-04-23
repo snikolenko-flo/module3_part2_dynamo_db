@@ -5,15 +5,11 @@ import { opendir, stat } from 'fs/promises';
 import { Image } from '../models/image.model';
 import { DbService } from '../services/db-service';
 import { IResponseWithImages } from '../interfaces/response';
+import { getFilesAmountFromDynamoDB } from '../services/db-service';
 
 const mongoUrl = process.env.MONGO_URL;
 
 export class GalleryFile {
-  async getFilesAmountFromDb(): Promise<number> {
-    await mongoose.connect(mongoUrl!);
-    return await Image.countDocuments({}).exec();
-  }
-
   async getFilesAmount(directory: string, counter?: number): Promise<number> {
     try {
       const dir = await opendir(directory);
@@ -73,7 +69,7 @@ export class GalleryFile {
       return this.getNumberOfPagesForUser(userImagesNumber);
     }
 
-    const total = await this.getFilesAmountFromDb();
+    const total = await getFilesAmountFromDynamoDB();
     const totalPages = this.calculatePagesNumber(total);
 
     if (limit) {

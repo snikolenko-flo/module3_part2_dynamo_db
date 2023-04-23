@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import { DbService } from '../services/db-service';
 import { GalleryManager } from './gallery.manager';
-
+import { getFilesAmountFromDynamoDB } from '../services/db-service';
 const mongoUrl = process.env.MONGO_URL;
 
 export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
@@ -32,7 +32,8 @@ export const getImagesLimit: APIGatewayProxyHandlerV2 = async (event) => {
   try {
     const dbService = new DbService();
     await mongoose.connect(mongoUrl!);
-    const pageLimit = await dbService.getImagesNumber();
+    //const pageLimit = await dbService.getImagesNumber();
+    const pageLimit = await getFilesAmountFromDynamoDB();
     const limit = JSON.stringify({ limit: pageLimit });
     log(`Page limit ${limit} was sent to the frontend.`);
     return createResponse(200, limit);
