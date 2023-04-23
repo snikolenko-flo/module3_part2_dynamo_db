@@ -5,9 +5,47 @@ import { log } from '@helper/logger';
 import mongoose from 'mongoose';
 import { PER_PAGE } from '../data/constants.js';
 import { IResponseWithImages } from '../interfaces/response';
-import { Images } from '../interfaces/image';
+import { Images, DynamoImages } from '../interfaces/image';
+import { DynamoDBClient, QueryCommand } from '@aws-sdk/client-dynamodb';
 
+const client = new DynamoDBClient({ region: 'ap-northeast-1' });
+const defaultLimit = 60;
 const mongoUrl = process.env.MONGO_URL;
+
+async function getImagesFromDynamoDB(limit: number) {
+  let imagesLimit = limit;
+  
+  if(limit <= 0) {
+    imagesLimit = defaultLimit;
+  }
+
+  const params = {
+    TableName: 'module3_part2',
+    KeyConditionExpression: '#pk = :pkval',
+    ExpressionAttributeNames: {
+      '#pk': 'email',
+    },
+    ExpressionAttributeValues: {
+      ':pkval': { S: 'admin@flo.team' },
+    },
+    Limit: imagesLimit,
+  };
+
+  const queryCommand = new QueryCommand(params);
+
+  try {
+    const data = await client.send(queryCommand);
+    return removeUsersFromResponse(data.Items);
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function removeUsersFromResponse(dynamoArray) {
+  return dynamoArray.filter(function (item) {
+    return String(item.path.S) !== 'default';
+});
+}
 
 export class DbService {
   async uploadImageData(fileMetadata: object, filePath: string, userEmail: string): Promise<void> {
@@ -49,20 +87,17 @@ export class DbService {
     return images.slice(start, endIndex);
   }
 
-  private sortImagesFromOldToNew(images: Images[]): Images[] {
-    return images.sort((a, b) => Number(a.date) - Number(b.date));
+  private sortImagesFromOldToNew(images: DynamoImages[]): DynamoImages[] {
+    return images.sort((a, b) => Number(a.date.S) - Number(b.date.S));
   }
 
-  private retrieveImagesPaths(images: Images[]): string[] {
-    return images.map((item) => item.path);
+  private retrieveImagesPaths(images: DynamoImages[]): (string | undefined)[] {
+    return images.map((item) => item.path.S);
   }
 
-  async getImages(page: number, limit: number, pagesAmount: number): Promise<IResponseWithImages> {
+  async getImagesFromDynamo(page: number, limit: number, pagesAmount: number): Promise<IResponseWithImages> {
     try {
-      const images: Images[] = (await Image.find({})
-        .select(['path', 'date'])
-        .sort({ date: -1 })
-        .limit(limit)) as Images[];
+      const images: DynamoImages[] = (await getImagesFromDynamoDB(limit)) as DynamoImages[];
       const sortedImages = this.sortImagesFromOldToNew(images);
       const imagesPaths = this.retrieveImagesPaths(sortedImages);
 
@@ -73,7 +108,7 @@ export class DbService {
         objects: paths,
       };
     } catch (e) {
-      throw Error(`${e} | class: ${this.constructor.name} | function: getImages.`);
+      throw Error(`${e} | class: DbService | function: getImagesFromDynamo.`);
     }
   }
 

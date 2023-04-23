@@ -63,7 +63,7 @@ export class GalleryFile {
       return await dbService.getUserImages(pageNumber, pageLimit, pagesAmount, user);
     } else {
       log('Get all images.');
-      return await dbService.getImages(pageNumber, pageLimit, pagesAmount);
+      return await dbService.getImagesFromDynamo(pageNumber, pageLimit, pagesAmount);
     }
   }
 
