@@ -19,12 +19,12 @@ export const login: APIGatewayProxyHandlerV2 = async (event) => {
     const authService = new AuthService();
     await mongoose.connect(mongoUrl!);
 
-    const user: IUser = await manager.user.findUser(email, dbService);
+    const user = await manager.user.findUser(email, dbService);
 
     if (!user) return createResponse(401, { errorMessage: 'Email or password are invalid.' });
     log('The user exists.');
 
-    const valid = await user.isValidPassword(password);
+    const valid = await manager.user.isValidPassword(user.salt, user.password, password);
     if (!valid) return createResponse(401, { errorMessage: 'Email or password are invalid.' });
     log('The user email and password are valid.');
 

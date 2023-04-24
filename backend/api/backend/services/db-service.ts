@@ -1,4 +1,4 @@
-import { IUser } from '../interfaces/user';
+import { DynamoUser, IUser } from '../interfaces/user';
 import { Image } from '../models/image.model';
 import { User } from '../models/user.model';
 import { log } from '@helper/logger';
@@ -91,9 +91,34 @@ export class DbService {
     log(`The image ${filePath} was saved`);
   }
 
-  async findUser(email: string): Promise<IUser> {
-    return (await User.findOne({ email: email }).select(['email', 'password', 'salt']).exec()) as IUser;
+  async findUserInDynamo(email: string) {
+  const params = {
+    TableName: 'module3_part2',
+    KeyConditionExpression: '#pk = :pkval',
+    ExpressionAttributeNames: {
+      '#pk': 'email',
+    },
+    ExpressionAttributeValues: {
+      ':pkval': { S: email },
+    }
+  };
+
+  const queryCommand = new QueryCommand(params);
+
+  try {
+    const data = await client.send(queryCommand);
+    const user = data.Items[0];
+
+    return {
+      salt: user.salt.S,
+      email: user.email.S,
+      password: user.password.S,
+      path: user.path.S
+    }
+  } catch (err) {
+    console.error(err);
   }
+ }
 
   async getImagesNumber(): Promise<number> {
     return Image.count();

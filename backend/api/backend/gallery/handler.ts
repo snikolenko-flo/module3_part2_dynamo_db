@@ -30,9 +30,6 @@ export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
 
 export const getImagesLimit: APIGatewayProxyHandlerV2 = async (event) => {
   try {
-    const dbService = new DbService();
-    await mongoose.connect(mongoUrl!);
-    //const pageLimit = await dbService.getImagesNumber();
     const pageLimit = await getFilesAmountFromDynamoDB();
     const limit = JSON.stringify({ limit: pageLimit });
     log(`Page limit ${limit} was sent to the frontend.`);
