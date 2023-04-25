@@ -52,14 +52,15 @@ export class GalleryFile {
     pageLimit: number,
     pagesAmount: number,
     dbService: DbService,
-    user?: string
+    currentUser: string,
+    user?: string,
   ): Promise<IResponseWithImages> {
     if (user) {
       log(`Get images for the user ${user}.`);
       return await dbService.getUserImages(pageNumber, pageLimit, pagesAmount, user);
     } else {
       log('Get all images.');
-      return await dbService.getImagesFromDynamo(pageNumber, pageLimit, pagesAmount);
+      return await dbService.getImagesFromDynamo(pageNumber, pageLimit, pagesAmount, currentUser);
     }
   }
 

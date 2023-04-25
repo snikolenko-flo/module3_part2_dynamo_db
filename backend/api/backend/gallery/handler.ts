@@ -7,6 +7,8 @@ import { DbService } from '../services/db-service';
 import { GalleryManager } from './gallery.manager';
 import { getFilesAmountFromDynamoDB } from '../services/db-service';
 const mongoUrl = process.env.MONGO_URL;
+import jwt from 'jsonwebtoken';
+const secret = process.env.SECRET;
 
 export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
   try {
@@ -17,12 +19,17 @@ export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
     const pageLimit = parseInt(params!.limit!);
     const user = params!.filter;
 
+    const token = event['headers'].authorization;
+    const decodedToken = jwt.verify(token, secret);
+    const currentUser = decodedToken.user.email;
+    console.log(`currentUser: ${currentUser}`);
+    
     if (isNaN(pageNumber)) return createResponse(400, { message: 'The page number should be an integer' });
     if (!isFinite(pageNumber)) return createResponse(400, { message: 'The page number should be a finite integer' });
     await mongoose.connect(mongoUrl!);
 
     const dbService = new DbService();
-    return await manager.getGallery(user!, pageNumber, pageLimit, dbService);
+    return await manager.getGallery(user!, pageNumber, pageLimit, dbService, currentUser);
   } catch (e) {
     return errorHandler(e);
   }

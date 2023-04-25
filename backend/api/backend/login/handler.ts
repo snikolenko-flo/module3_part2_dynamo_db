@@ -5,7 +5,6 @@ import mongoose from 'mongoose';
 import { LoginManager } from './login.manager';
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import { DbService } from '../services/db-service';
-import { IUser } from '../interfaces/user';
 import { AuthService } from '../services/auth';
 
 const secret = process.env.SECRET;
@@ -17,7 +16,6 @@ export const login: APIGatewayProxyHandlerV2 = async (event) => {
     const { email, password } = JSON.parse(event.body!);
     const dbService = new DbService();
     const authService = new AuthService();
-    await mongoose.connect(mongoUrl!);
 
     const user = await manager.user.findUser(email, dbService);
 

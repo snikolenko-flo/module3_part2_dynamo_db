@@ -7,6 +7,6 @@ export class UploadManager {
   }
 
   async uploadImageDataToDb(metadata: object, s3filePath: string, userEmail: string, dbService: DbService) {
-    await dbService.uploadImageData(metadata, s3filePath, userEmail);
+    await dbService.uploadImageToDynamo(metadata, s3filePath, userEmail);
   }
 }

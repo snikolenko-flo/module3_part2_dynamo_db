@@ -1,41 +1,64 @@
-import { DynamoUser, IUser } from '../interfaces/user';
+import { DynamoUser, IUser, DynamoImage } from '../interfaces/user';
 import { Image } from '../models/image.model';
 import { User } from '../models/user.model';
 import { log } from '@helper/logger';
-import mongoose from 'mongoose';
 import { PER_PAGE } from '../data/constants.js';
 import { IResponseWithImages } from '../interfaces/response';
 import { Images, DynamoImages } from '../interfaces/image';
-import { DynamoDBClient, QueryCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, QueryCommand, PutItemCommand, BatchGetItemCommand } from '@aws-sdk/client-dynamodb';
 
 const client = new DynamoDBClient({ region: 'ap-northeast-1' });
 const defaultLimit = 60;
-const mongoUrl = process.env.MONGO_URL;
+const DB_TABLE = 'module3_part2';
+const adminEmail = 'admin@flo.team';
 
-async function getImagesFromDynamoDB(limit: number) {
+function createParamsForQuery(email: string, limit: number) {
   let imagesLimit = limit;
   
   if(limit <= 0) {
     imagesLimit = defaultLimit;
   }
 
-  const params = {
-    TableName: 'module3_part2',
+  return {
+    TableName: DB_TABLE,
     KeyConditionExpression: '#pk = :pkval',
     ExpressionAttributeNames: {
       '#pk': 'email',
     },
     ExpressionAttributeValues: {
-      ':pkval': { S: 'admin@flo.team' },
+      ':pkval': { S: email },
     },
     Limit: imagesLimit,
   };
+};
 
+async function getCommonImages(limit: number) {
+  const params = createParamsForQuery(adminEmail, limit);
   const queryCommand = new QueryCommand(params);
-
   try {
     const data = await client.send(queryCommand);
     return removeUsersFromResponse(data.Items);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+async function getImagesForUser(email: string, limit: number) {
+  const params = createParamsForQuery(email, limit);
+  const queryCommand = new QueryCommand(params);
+  try {
+    const data = await client.send(queryCommand);
+    return removeUsersFromResponse(data.Items);
+  } catch (err) {
+    console.error(err);
+  }
+};
+
+async function getImagesFromDynamoDB(limit: number, currentUser: string) {
+  try {  
+    const commonImages = await getCommonImages(limit);
+    const userImages = await getImagesForUser(currentUser, limit);
+    return commonImages.concat(userImages);
   } catch (err) {
     console.error(err);
   }
@@ -71,24 +94,33 @@ function removeUsersFromResponse(dynamoArray) {
 }
 
 export class DbService {
-  async uploadImageData(fileMetadata: object, filePath: string, userEmail: string): Promise<void> {
-    await mongoose.connect(mongoUrl!);
-
-    const isImage = await Image.findOne({ path: filePath }).exec();
-    if (isImage) return;
-
-    const user = await User.findOne({ email: userEmail }).exec();
+  async uploadImageToDynamo(fileMetadata: object, filePath: string, userEmail: string): Promise<void> {
     const date = new Date();
+    const input = {
+      Item: {
+        email: {
+          S: userEmail,
+        },
+        path: {
+          S: filePath,
+        },
+        metadata: {
+          S: JSON.stringify(fileMetadata),
+        },
+        date: {
+          S: date.toString(),
+        },
+      },
+      TableName: 'module3_part2',
+    };
 
-    const image = new Image({
-      path: filePath,
-      metadata: fileMetadata,
-      date: date,
-      user: user!._id,
-    });
-
-    await image.save();
-    log(`The image ${filePath} was saved`);
+    try {
+      const command = new PutItemCommand(input);
+      const response = await client.send(command);
+      console.log(`Dynamo DB response: ${response}`);
+    } catch (error) {
+      console.log(`Dynamo DB error: ${error}`);
+    }
   }
 
   async findUserInDynamo(email: string) {
@@ -143,9 +175,9 @@ export class DbService {
     return images.map((item) => item.path.S);
   }
 
-  async getImagesFromDynamo(page: number, limit: number, pagesAmount: number): Promise<IResponseWithImages> {
+  async getImagesFromDynamo(page: number, limit: number, pagesAmount: number, currentUser: string): Promise<IResponseWithImages> {
     try {
-      const images: DynamoImages[] = (await getImagesFromDynamoDB(limit)) as DynamoImages[];
+      const images: DynamoImages[] = (await getImagesFromDynamoDB(limit, currentUser)) as DynamoImages[];
       const sortedImages = this.sortImagesFromOldToNew(images);
       const imagesPaths = this.retrieveImagesPaths(sortedImages);
 
