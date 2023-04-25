@@ -157,7 +157,7 @@ export class DbService {
   }
 
   async getUserImagesNumber(userEmail: string, limit: number): Promise<number> {
-    const images = await this.getImagesOfUser(userEmail, limit);
+    const images = await getImagesForUser(userEmail, limit);
     return images.length;
   }
 
@@ -192,18 +192,31 @@ export class DbService {
     }
   }
 
-  private async getImagesOfUser(userEmail: string, limit: number): Promise<Images[]> {
-    try {
-      const user = await User.findOne({ email: userEmail }).exec();
-      const images: Images[] = (await Image.find({ user: user!.id })
-        .select(['path', 'date'])
-        .sort({ date: -1 })
-        .limit(limit)) as Images[];
-      return images;
-    } catch (e) {
-      throw Error(`${e} | class: ${this.constructor.name} | function: getImagesOfUser.`);
-    }
-  }
+  // private async getImagesOfUser(userEmail: string, limit: number): Promise<Images[]> {
+  //   try {
+  //     const user = await User.findOne({ email: userEmail }).exec();
+  //     const images: Images[] = (await Image.find({ user: user!.id })
+  //       .select(['path', 'date'])
+  //       .sort({ date: -1 })
+  //       .limit(limit)) as Images[];
+  //     return images;
+  //   } catch (e) {
+  //     throw Error(`${e} | class: ${this.constructor.name} | function: getImagesOfUser.`);
+  //   }
+  // }
+
+  // private async getImagesOfUserFromDynamo(userEmail: string, limit: number): Promise<Images[]> {
+  //   try {
+  //     const user = await User.findOne({ email: userEmail }).exec();
+  //     const images: Images[] = (await Image.find({ user: user!.id })
+  //       .select(['path', 'date'])
+  //       .sort({ date: -1 })
+  //       .limit(limit)) as Images[];
+  //     return images;
+  //   } catch (e) {
+  //     throw Error(`${e} | class: ${this.constructor.name} | function: getImagesOfUser.`);
+  //   }
+  // }
 
   async getUserImages(
     page: number,
@@ -212,7 +225,7 @@ export class DbService {
     userEmail?: string
   ): Promise<IResponseWithImages> {
     try {
-      const images = await this.getImagesOfUser(userEmail!, limit);
+      const images = await getImagesForUser(userEmail!, limit);
       const sortedImages = this.sortImagesFromOldToNew(images);
       const imagesPaths = this.retrieveImagesPaths(sortedImages);
 
