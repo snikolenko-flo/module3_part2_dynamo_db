@@ -26,7 +26,7 @@ export const login: APIGatewayProxyHandlerV2 = async (event) => {
     if (!valid) return createResponse(401, { errorMessage: 'Email or password are invalid.' });
     log('The user email and password are valid.');
 
-    const token = authService.createJWTToken(user, secret!);
+    const token = authService.createJWTToken(user.email, secret!);
     log('Token is created');
     return createResponse(200, { token });
   } catch (e) {

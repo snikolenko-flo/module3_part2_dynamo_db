@@ -6,6 +6,8 @@ import { PER_PAGE } from '../data/constants.js';
 import { IResponseWithImages } from '../interfaces/response';
 import { Images, DynamoImages } from '../interfaces/image';
 import { DynamoDBClient, QueryCommand, PutItemCommand, BatchGetItemCommand } from '@aws-sdk/client-dynamodb';
+import util from 'util';
+import * as crypto from 'crypto';
 
 const client = new DynamoDBClient({ region: 'ap-northeast-1' });
 const defaultLimit = 60;
@@ -91,6 +93,12 @@ function removeUsersFromResponse(dynamoArray) {
   return dynamoArray.filter(function (item) {
     return String(item.path.S) !== 'default';
 });
+}
+
+async function hashPassword(password: string, salt: string): Promise<string> {
+  const crypt = util.promisify(crypto.pbkdf2);
+  const hash = await crypt(password, salt, 1000, 64, 'sha512');
+  return hash.toString('hex');
 }
 
 export class DbService {
@@ -192,32 +200,6 @@ export class DbService {
     }
   }
 
-  // private async getImagesOfUser(userEmail: string, limit: number): Promise<Images[]> {
-  //   try {
-  //     const user = await User.findOne({ email: userEmail }).exec();
-  //     const images: Images[] = (await Image.find({ user: user!.id })
-  //       .select(['path', 'date'])
-  //       .sort({ date: -1 })
-  //       .limit(limit)) as Images[];
-  //     return images;
-  //   } catch (e) {
-  //     throw Error(`${e} | class: ${this.constructor.name} | function: getImagesOfUser.`);
-  //   }
-  // }
-
-  // private async getImagesOfUserFromDynamo(userEmail: string, limit: number): Promise<Images[]> {
-  //   try {
-  //     const user = await User.findOne({ email: userEmail }).exec();
-  //     const images: Images[] = (await Image.find({ user: user!.id })
-  //       .select(['path', 'date'])
-  //       .sort({ date: -1 })
-  //       .limit(limit)) as Images[];
-  //     return images;
-  //   } catch (e) {
-  //     throw Error(`${e} | class: ${this.constructor.name} | function: getImagesOfUser.`);
-  //   }
-  // }
-
   async getUserImages(
     page: number,
     limit: number,
@@ -240,7 +222,34 @@ export class DbService {
     }
   }
 
-  async createUser(email: string, password: string, salt: string): Promise<IUser> {
-    return (await User.create({ email, password, salt })) as IUser;
+  async createDynamoUser(email: string, password: string, salt: string): Promise<void> {
+    const input = {
+      Item: {
+        email: {
+          S: email,
+        },
+        path: {
+          S: 'default',
+        },
+        password: {
+          S: await hashPassword(password, salt),
+        },
+        salt: {
+          S: salt,
+        },
+      },
+      TableName: 'module3_part2',
+    };
+    try {
+      const command = new PutItemCommand(input);
+      const response = await client.send(command);
+      console.log(`Dynamo DB response: ${response}`);
+    } catch (error) {
+      console.log(`Dynamo DB error: ${error}`);
+    }
   }
+
+  // async createUser(email: string, password: string, salt: string): Promise<IUser> {
+  //   return (await User.create({ email, password, salt })) as IUser;
+  // }
 }

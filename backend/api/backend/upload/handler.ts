@@ -21,7 +21,7 @@ export const upload: APIGatewayProxyHandlerV2 = async (event) => {
     const { filename, data, type } = extractFile(event);
     const token = event.headers.authorization;
     const decodedToken = jwt.verify(token, secret);
-    const userEmail = decodedToken.user.email;
+    const userEmail = decodedToken.user;
 
     const s3filePath = `${pathToBucket}/${filename}`;
     const metadata = fileService.getMetadata(data, type);

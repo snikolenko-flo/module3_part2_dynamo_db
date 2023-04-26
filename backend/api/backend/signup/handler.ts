@@ -17,14 +17,14 @@ export const signup: APIGatewayProxyHandlerV2 = async (event) => {
 
     const { email, password } = JSON.parse(event.body!);
     const salt = crypto.randomBytes(16).toString('hex');
-    await mongoose.connect(mongoUrl!);
+   // await mongoose.connect(mongoUrl!);
 
     const dbService = new DbService();
     const authService = new AuthService();
 
-    const user = await manager.user.createUser(email, password, salt, dbService);
-    log(`User ${user} is created`);
-    const token = manager.response.getToken(user, secret!, authService);
+    await manager.user.createUser(email, password, salt, dbService);
+    log(`User ${email} is created`);
+    const token = manager.response.getToken(email, secret!, authService);
     log('Token is created');
     return createResponse(200, { token });
   } catch (e) {
