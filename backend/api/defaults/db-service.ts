@@ -1,8 +1,7 @@
 import { opendir, readFile } from 'fs/promises';
 import util from 'util';
 import { uploadToS3 } from '../backend/services/s3.service';
-import { DynamoUser } from '../backend/interfaces/user';
-import { DynamoImage } from '../backend/interfaces/user';
+import { DynamoImage, DynamoUser } from '../backend/interfaces/user';
 import * as crypto from 'crypto';
 import { FileService } from '../backend/services/file.service';
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
@@ -13,10 +12,9 @@ const client = new DynamoDBClient({ region: 'ap-northeast-1' });
 
 const defaultImagesType = 'image/jpeg';
 const fileService = new FileService();
-const bucketEndpoint = 'https://stanislav-flo-test-bucket.s3.ap-northeast-1.amazonaws.com';
 const bucket = 's3-bucket';
-const pathToBucket = `${bucketEndpoint}/${bucket}`;
 const bucketName = 'stanislav-flo-test-bucket';
+const dynamoTable = 'module3_part2';
 
 export class DbService {
   async startDb(imagesDir: string): Promise<void> {
@@ -27,20 +25,24 @@ export class DbService {
   async putImageToDynamo(image: DynamoImage): Promise<void> {
     const input = {
       Item: {
-        email: {
+        Email: {
           S: image.email,
         },
-        path: {
+        FileName: {
+          S: image.filename,
+        },
+        ImagePath: {
           S: image.path,
         },
-        metadata: {
+        Metadata: {
           S: JSON.stringify(image.metadata),
         },
-        date: {
+        Date: {
           S: image.date.toString(),
         },
       },
-      TableName: 'module3_part2',
+      TableName: dynamoTable,
+      ConditionExpression: 'attribute_not_exists(Email) AND attribute_not_exists(FileName)'
     };
     try {
       const command = new PutItemCommand(input);
@@ -59,16 +61,19 @@ export class DbService {
   async addUser(user: DynamoUser): Promise<void> {
     const input = {
       Item: {
-        email: {
+        Email: {
           S: user.email,
         },
-        path: {
+        FileName: {
+          S: user.filename,
+        },
+        ImagePath: {
           S: user.path,
         },
-        password: {
+        Password: {
           S: await this.hashPassword(user.password, user.salt),
         },
-        salt: {
+        Salt: {
           S: user.salt,
         },
       },
@@ -86,24 +91,28 @@ export class DbService {
     const defaultUsersArray = [
       {
         email: 'admin@flo.team',
+        filename: 'default',
         path: 'default',
         password: 'jgF5tn4F123',
         salt: crypto.randomBytes(16).toString('hex'),
       },
       {
         email: 'asergeev@flo.team',
+        filename: 'default',
         path: 'default',
         password: 'jgF5tn4F',
         salt: crypto.randomBytes(16).toString('hex'),
       },
       {
         email: 'tpupkin@flo.team',
+        filename: 'default',
         path: 'default',
         password: 'tpupkin@flo.team',
         salt: crypto.randomBytes(16).toString('hex'),
       },
       {
         email: 'vkotikov@flo.team',
+        filename: 'default',
         path: 'default',
         password: 'po3FGas8',
         salt: crypto.randomBytes(16).toString('hex'),
@@ -126,8 +135,6 @@ export class DbService {
         if (isDir) {
           await this.addImagesData(fullPath);
         } else {
-          // const isImage = await this.isFileInDb(file.name);
-          // if (isImage) return;
           await this.saveFile(directory, file.name);
         }
       }
@@ -154,11 +161,10 @@ export class DbService {
     });
    
     const url = await getSignedUrl(client, command, { expiresIn: 3600 }); // expiresIn - time in seconds for the signed URL to expire
-    console.log('Presigned URL');
-    console.log(url);
 
     const dynamoImage = {
       email: 'admin@flo.team',
+      filename: fileName,
       path: url,
       metadata: metadata,
       date: new Date(),

@@ -1,7 +1,6 @@
 import { errorHandler } from '@helper/http-api/error-handler';
 import { createResponse } from '@helper/http-api/response';
 import { log } from '@helper/logger';
-import mongoose from 'mongoose';
 import { LoginManager } from './login.manager';
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import { DbService } from '../services/db-service';

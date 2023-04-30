@@ -8,7 +8,6 @@ export const uploadToS3 = async(data: Buffer, filename: string, bucket: string):
     endpoint: bucketEndpoint,
   });
 
-  //const client = new S3Client({ region: 'ap-northeast-1' });
   client
     .send(
       new PutObjectCommand({

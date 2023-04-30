@@ -1,17 +1,15 @@
-import { DynamoUser, IUser, DynamoImage } from '../interfaces/user';
 import { Image } from '../models/image.model';
-import { User } from '../models/user.model';
 import { log } from '@helper/logger';
 import { PER_PAGE } from '../data/constants.js';
 import { IResponseWithImages } from '../interfaces/response';
-import { Images, DynamoImages } from '../interfaces/image';
+import { DynamoImages } from '../interfaces/image';
 import { DynamoDBClient, QueryCommand, PutItemCommand, BatchGetItemCommand } from '@aws-sdk/client-dynamodb';
 import util from 'util';
 import * as crypto from 'crypto';
 
 const client = new DynamoDBClient({ region: 'ap-northeast-1' });
 const defaultLimit = 60;
-const DB_TABLE = 'module3_part2';
+const dynamoTable = 'module3_part2';
 const adminEmail = 'admin@flo.team';
 
 function createParamsForQuery(email: string, limit: number) {
@@ -22,10 +20,10 @@ function createParamsForQuery(email: string, limit: number) {
   }
 
   return {
-    TableName: DB_TABLE,
+    TableName: dynamoTable,
     KeyConditionExpression: '#pk = :pkval',
     ExpressionAttributeNames: {
-      '#pk': 'email',
+      '#pk': 'Email',
     },
     ExpressionAttributeValues: {
       ':pkval': { S: email },
@@ -41,7 +39,7 @@ async function getCommonImages(limit: number) {
     const data = await client.send(queryCommand);
     return removeUsersFromResponse(data.Items);
   } catch (err) {
-    console.error(err);
+    log(err);
   }
 };
 
@@ -52,7 +50,7 @@ async function getImagesForUser(email: string, limit: number) {
     const data = await client.send(queryCommand);
     return removeUsersFromResponse(data.Items);
   } catch (err) {
-    console.error(err);
+    log(err);
   }
 };
 
@@ -62,16 +60,16 @@ async function getImagesFromDynamoDB(limit: number, currentUser: string) {
     const userImages = await getImagesForUser(currentUser, limit);
     return commonImages.concat(userImages);
   } catch (err) {
-    console.error(err);
+    log(err);
   }
 }
 
 export async function getFilesAmountFromDynamoDB() {
   const params = {
-    TableName: 'module3_part2',
+    TableName: dynamoTable,
     KeyConditionExpression: '#pk = :pkval',
     ExpressionAttributeNames: {
-      '#pk': 'email',
+      '#pk': 'Email',
     },
     ExpressionAttributeValues: {
       ':pkval': { S: 'admin@flo.team' },
@@ -85,13 +83,13 @@ export async function getFilesAmountFromDynamoDB() {
     const data = await client.send(queryCommand);
     return data.Count;
   } catch (err) {
-    console.error(err);
+    log(err);
   }
 }
 
 function removeUsersFromResponse(dynamoArray) {
   return dynamoArray.filter(function (item) {
-    return String(item.path.S) !== 'default';
+    return String(item.ImagePath.S) !== 'default';
 });
 }
 
@@ -102,41 +100,43 @@ async function hashPassword(password: string, salt: string): Promise<string> {
 }
 
 export class DbService {
-  async uploadImageToDynamo(fileMetadata: object, filePath: string, userEmail: string): Promise<void> {
+  async uploadImageToDynamo(fileMetadata: object, filename: string, filePath: string, userEmail: string): Promise<void> {
     const date = new Date();
     const input = {
       Item: {
-        email: {
+        Email: {
           S: userEmail,
         },
-        path: {
+        FileName: {
+          S: filename,
+        },
+        ImagePath: {
           S: filePath,
         },
-        metadata: {
+        Metadata: {
           S: JSON.stringify(fileMetadata),
         },
-        date: {
+        Date: {
           S: date.toString(),
         },
       },
-      TableName: 'module3_part2',
+      TableName: dynamoTable,
     };
 
     try {
       const command = new PutItemCommand(input);
-      const response = await client.send(command);
-      console.log(`Dynamo DB response: ${response}`);
+      await client.send(command);
     } catch (error) {
-      console.log(`Dynamo DB error: ${error}`);
+      log(`Dynamo DB error: ${error}`);
     }
   }
 
   async findUserInDynamo(email: string) {
   const params = {
-    TableName: 'module3_part2',
+    TableName: dynamoTable,
     KeyConditionExpression: '#pk = :pkval',
     ExpressionAttributeNames: {
-      '#pk': 'email',
+      '#pk': 'Email',
     },
     ExpressionAttributeValues: {
       ':pkval': { S: email },
@@ -150,10 +150,10 @@ export class DbService {
     const user = data.Items[0];
 
     return {
-      salt: user.salt.S,
-      email: user.email.S,
-      password: user.password.S,
-      path: user.path.S
+      salt: user.Salt.S,
+      email: user.Email.S,
+      password: user.Password.S,
+      path: user.ImagePath.S
     }
   } catch (err) {
     console.error(err);
@@ -176,11 +176,11 @@ export class DbService {
   }
 
   private sortImagesFromOldToNew(images: DynamoImages[]): DynamoImages[] {
-    return images.sort((a, b) => Number(a.date.S) - Number(b.date.S));
+    return images.sort((a, b) => Number(a.Date.S) - Number(b.Date.S));
   }
 
   private retrieveImagesPaths(images: DynamoImages[]): (string | undefined)[] {
-    return images.map((item) => item.path.S);
+    return images.map((item) => item.ImagePath.S);
   }
 
   async getImagesFromDynamo(page: number, limit: number, pagesAmount: number, currentUser: string): Promise<IResponseWithImages> {
@@ -225,31 +225,26 @@ export class DbService {
   async createDynamoUser(email: string, password: string, salt: string): Promise<void> {
     const input = {
       Item: {
-        email: {
+        Email: {
           S: email,
         },
-        path: {
+        ImagePath: {
           S: 'default',
         },
-        password: {
+        Password: {
           S: await hashPassword(password, salt),
         },
-        salt: {
+        Salt: {
           S: salt,
         },
       },
-      TableName: 'module3_part2',
+      TableName: dynamoTable,
     };
     try {
       const command = new PutItemCommand(input);
-      const response = await client.send(command);
-      console.log(`Dynamo DB response: ${response}`);
+      await client.send(command);
     } catch (error) {
-      console.log(`Dynamo DB error: ${error}`);
+      log(`Dynamo DB error: ${error}`);
     }
   }
-
-  // async createUser(email: string, password: string, salt: string): Promise<IUser> {
-  //   return (await User.create({ email, password, salt })) as IUser;
-  // }
 }

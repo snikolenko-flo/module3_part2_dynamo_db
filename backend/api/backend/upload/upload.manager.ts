@@ -6,7 +6,7 @@ export class UploadManager {
     uploadToS3(data, filename, bucket);
   }
 
-  async uploadImageDataToDb(metadata: object, s3filePath: string, userEmail: string, dbService: DbService) {
-    await dbService.uploadImageToDynamo(metadata, s3filePath, userEmail);
+  async uploadImageDataToDb(metadata: object, filename: string, s3filePath: string, userEmail: string, dbService: DbService) {
+    await dbService.uploadImageToDynamo(metadata, filename, s3filePath, userEmail);
   }
 }

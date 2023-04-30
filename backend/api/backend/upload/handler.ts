@@ -26,8 +26,6 @@ export const upload: APIGatewayProxyHandlerV2 = async (event) => {
     const decodedToken = jwt.verify(token, secret);
     const userEmail = decodedToken.user;
 
-   // const s3filePath = `${pathToBucket}/${filename}`;
-
     const client = new S3Client({});
 
     const command = new GetObjectCommand({
@@ -45,7 +43,7 @@ export const upload: APIGatewayProxyHandlerV2 = async (event) => {
 
     manager.uploadImageToS3(data, filename, bucket);
 
-    await manager.uploadImageDataToDb(metadata, s3filePath, userEmail, dbService);
+    await manager.uploadImageDataToDb(metadata, filename, s3filePath, userEmail, dbService);
     return createResponse(200);
   } catch (e) {
     return errorHandler(e);
