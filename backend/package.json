@@ -10,7 +10,8 @@
     "deploy:local": "sls offline start --stage local --config serverless.ts",
     "build-defaults:dynamo": "tsc -p api/defaults/tsconfig.json",
     "add-defaults:dynamo": "node api/defaults/build/defaults/add-defaults.db.js",
-    "start": "concurrently --kill-others-on-fail \"npm run add-defaults:dynamo\" \"npm run deploy:local\"",
+    "start:dynamo": "npm run build-defaults:dynamo && npm run add-defaults:dynamo",
+    "start": "concurrently --kill-others-on-fail \"npm run start:dynamo\" \"npm run deploy:local\"",
     "sls:package:dev": "sls package --stage dev --config serverless.ts",
     "sls:package:test": "sls package --stage test --config serverless.ts",
     "sls:package:prod": "sls package --stage prod --config serverless.ts",
@@ -101,6 +102,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-dynamodb": "^3.306.0",
+    "@aws-sdk/s3-request-presigner": "^3.321.1",
     "@floteam/errors": "^1.0.8",
     "@redtea/format-axios-error": "^2.0.2",
     "@types/node": "16.18.2",

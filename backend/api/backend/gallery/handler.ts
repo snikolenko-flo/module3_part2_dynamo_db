@@ -21,10 +21,7 @@ export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
 
     const token = event['headers'].authorization;
     const decodedToken = jwt.verify(token, secret);
-    console.log('decodedToken');
-    console.log(decodedToken);
     const currentUser = decodedToken.user;
-    console.log(`currentUser: ${currentUser}`);
 
     if (isNaN(pageNumber)) return createResponse(400, { message: 'The page number should be an integer' });
     if (!isFinite(pageNumber)) return createResponse(400, { message: 'The page number should be a finite integer' });

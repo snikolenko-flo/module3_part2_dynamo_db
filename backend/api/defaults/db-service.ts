@@ -6,6 +6,8 @@ import { DynamoImage } from '../backend/interfaces/user';
 import * as crypto from 'crypto';
 import { FileService } from '../backend/services/file.service';
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const client = new DynamoDBClient({ region: 'ap-northeast-1' });
 
@@ -14,6 +16,7 @@ const fileService = new FileService();
 const bucketEndpoint = 'https://stanislav-flo-test-bucket.s3.ap-northeast-1.amazonaws.com';
 const bucket = 's3-bucket';
 const pathToBucket = `${bucketEndpoint}/${bucket}`;
+const bucketName = 'stanislav-flo-test-bucket';
 
 export class DbService {
   async startDb(imagesDir: string): Promise<void> {
@@ -41,8 +44,7 @@ export class DbService {
     };
     try {
       const command = new PutItemCommand(input);
-      const response = await client.send(command);
-      console.log(`Dynamo DB response: ${response}`);
+      await client.send(command);
     } catch (error) {
       console.log(`Dynamo DB error: ${error}`);
     }
@@ -74,8 +76,7 @@ export class DbService {
     };
     try {
       const command = new PutItemCommand(input);
-      const response = await client.send(command);
-      console.log(`Dynamo DB response: ${response}`);
+      await client.send(command);
     } catch (error) {
       console.log(`Dynamo DB error: ${error}`);
     }
@@ -144,10 +145,21 @@ export class DbService {
     const metadata = fileService.getMetadata(buffer, defaultImagesType);
 
     uploadToS3(buffer, fileName, bucket);
+    
+    const client = new S3Client({});
+
+    const command = new GetObjectCommand({
+      Bucket: bucketName,
+      Key: `${bucket}/${fileName}`
+    });
+   
+    const url = await getSignedUrl(client, command, { expiresIn: 3600 }); // expiresIn - time in seconds for the signed URL to expire
+    console.log('Presigned URL');
+    console.log(url);
 
     const dynamoImage = {
       email: 'admin@flo.team',
-      path: `${pathToBucket}/${fileName}`,
+      path: url,
       metadata: metadata,
       date: new Date(),
     };
