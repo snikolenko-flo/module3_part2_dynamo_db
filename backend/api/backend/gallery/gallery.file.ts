@@ -1,13 +1,9 @@
 import { log } from '@helper/logger';
-import mongoose from 'mongoose';
 import { PER_PAGE } from '../data/constants.js';
 import { opendir, stat } from 'fs/promises';
-import { Image } from '../models/image.model';
 import { DbService } from '../services/db-service';
 import { IResponseWithImages } from '../interfaces/response';
 import { getFilesAmountFromDynamoDB } from '../services/db-service';
-
-const mongoUrl = process.env.MONGO_URL;
 
 export class GalleryFile {
   async getFilesAmount(directory: string, counter?: number): Promise<number> {

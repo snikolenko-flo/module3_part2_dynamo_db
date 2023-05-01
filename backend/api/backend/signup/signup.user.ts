@@ -1,4 +1,3 @@
-import { IUser } from '../interfaces/user';
 import { DbService } from '../services/db-service';
 
 export class SignupUser {

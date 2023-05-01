@@ -1,4 +1,3 @@
-import { Image } from '../models/image.model';
 import { log } from '@helper/logger';
 import { PER_PAGE } from '../data/constants.js';
 import { IResponseWithImages } from '../interfaces/response';
@@ -159,10 +158,6 @@ export class DbService {
     console.error(err);
   }
  }
-
-  async getImagesNumber(): Promise<number> {
-    return Image.count();
-  }
 
   async getUserImagesNumber(userEmail: string, limit: number): Promise<number> {
     const images = await getImagesForUser(userEmail, limit);

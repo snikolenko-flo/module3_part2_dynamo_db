@@ -112,7 +112,6 @@
     "dotenv": "16.0.0",
     "dynamoose": "^2.8.3",
     "jsonwebtoken": "^9.0.0",
-    "mongoose": "^6.8.4",
     "nodemailer": "^6.7.2",
     "parse-multipart": "^1.0.4",
     "piexifjs": "^1.0.6",
