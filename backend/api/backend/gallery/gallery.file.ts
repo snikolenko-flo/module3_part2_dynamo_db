@@ -84,7 +84,7 @@ export class GalleryFile {
     return this.calculatePagesNumber(filesNumber);
   }
 
-  private calculatePagesNumber(filesAmount) {
+  private calculatePagesNumber(filesAmount: number): number {
     const onePage = 1;
     if (filesAmount <= PER_PAGE) return onePage;
 

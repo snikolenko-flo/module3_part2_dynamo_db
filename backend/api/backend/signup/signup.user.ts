@@ -1,7 +1,7 @@
 import { DbService } from '../services/db-service';
 
 export class SignupUser {
-  async createUser(email: string, password: string, salt: string, dbService: DbService) {
+  async createUser(email: string, password: string, salt: string, dbService: DbService): Promise<void> {
     try {
       await dbService.createDynamoUser(email, password, salt);
     } catch (e) {
