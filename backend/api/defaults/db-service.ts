@@ -42,13 +42,13 @@ export class DbService {
         },
       },
       TableName: dynamoTable,
-      ConditionExpression: 'attribute_not_exists(Email) AND attribute_not_exists(FileName)'
+      ConditionExpression: 'attribute_not_exists(Email) AND attribute_not_exists(FileName)',
     };
     try {
       const command = new PutItemCommand(input);
       await client.send(command);
-    } catch (error) {
-      console.log(`Dynamo DB error: ${error}`);
+    } catch (e) {
+      throw Error(`Error: ${e} | class: DbService | function: putImageToDynamo.`);
     }
   }
 
@@ -57,7 +57,7 @@ export class DbService {
     const hash = await crypt(password, salt, 1000, 64, 'sha512');
     return hash.toString('hex');
   }
-  
+
   async addUser(user: DynamoUser): Promise<void> {
     const input = {
       Item: {
@@ -77,13 +77,13 @@ export class DbService {
           S: user.salt,
         },
       },
-      TableName: 'module3_part2',
+      TableName: dynamoTable,
     };
     try {
       const command = new PutItemCommand(input);
       await client.send(command);
-    } catch (error) {
-      console.log(`Dynamo DB error: ${error}`);
+    } catch (e) {
+      throw Error(`Error: ${e} | class: DbService | function: addUser.`);
     }
   }
 
@@ -118,7 +118,7 @@ export class DbService {
         salt: crypto.randomBytes(16).toString('hex'),
       },
     ];
-  
+
     for (const user of defaultUsersArray) {
       await this.addUser(user);
     }
@@ -139,7 +139,7 @@ export class DbService {
         }
       }
     } catch (e) {
-      throw Error(`${e} | class: ${this.constructor.name} | function: addImagesData.`);
+      throw Error(`Error: ${e} | class: DbService | function: addImagesData.`);
     }
   }
 
@@ -152,14 +152,14 @@ export class DbService {
     const metadata = fileService.getMetadata(buffer, defaultImagesType);
 
     uploadToS3(buffer, fileName, s3ImagesDirectory);
-    
+
     const client = new S3Client({});
 
     const command = new GetObjectCommand({
       Bucket: bucket,
-      Key: `${s3ImagesDirectory}/${fileName}`
+      Key: `${s3ImagesDirectory}/${fileName}`,
     });
-   
+
     const url = await getSignedUrl(client, command, { expiresIn: 3600 }); // expiresIn - time in seconds for the signed URL to expire
 
     const dynamoImage = {
@@ -177,7 +177,7 @@ export class DbService {
       await this.addImagesData(imagesDir);
       console.log('Images have been added to DB.');
     } catch (e) {
-      throw Error(`${e} | class: ${this.constructor.name} | function: addImagesDataToDB.`);
+      throw Error(`${e} | class: DbService | function: addImagesDataToDB.`);
     }
   }
 }

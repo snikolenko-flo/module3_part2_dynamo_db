@@ -1,8 +1,8 @@
-import { S3Client, PutObjectCommand} from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 const bucketEndpoint = 'https://stanislav-flo-test-bucket.s3.ap-northeast-1.amazonaws.com';
 
-export const uploadToS3 = async(data: Buffer, filename: string, bucket: string): Promise<void> => {
+export const uploadToS3 = async (data: Buffer, filename: string, bucket: string): Promise<void> => {
   const client = new S3Client({
     forcePathStyle: true,
     endpoint: bucketEndpoint,

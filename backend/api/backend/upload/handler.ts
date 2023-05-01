@@ -29,9 +29,9 @@ export const upload: APIGatewayProxyHandlerV2 = async (event) => {
 
     const command = new GetObjectCommand({
       Bucket: bucket,
-      Key: `${s3ImageDirectory}/${filename}`
+      Key: `${s3ImageDirectory}/${filename}`,
     });
-   
+
     const s3filePath = await getSignedUrl(client, command, { expiresIn: 3600 }); // expiresIn - time in seconds for the signed URL to expire
     console.log('Presigned URL');
     console.log(s3filePath);

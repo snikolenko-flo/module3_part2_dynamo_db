@@ -1,9 +1,9 @@
 import { log } from '@helper/logger';
-import { PER_PAGE } from '../data/constants.js';
+import { PER_PAGE } from '../data/constants';
 import { IResponseWithImages } from '../interfaces/response';
 import { DynamoImages } from '../interfaces/image';
 import { DynamoDBClient, QueryCommand, PutItemCommand, QueryOutput } from '@aws-sdk/client-dynamodb';
-import { DynamoUser } from '../interfaces/user.js';
+import { DynamoUser } from '../interfaces/user';
 import { DynamoQueryParams } from '../interfaces/dynamo';
 import util from 'util';
 import * as crypto from 'crypto';
@@ -18,8 +18,8 @@ const client = new DynamoDBClient({ region: awsRegion });
 
 function createParamsForQuery(email: string, limit: number): DynamoQueryParams {
   let imagesLimit = limit;
-  
-  if(limit <= 0) {
+
+  if (limit <= 0) {
     imagesLimit = defaultLimit;
   }
 
@@ -34,7 +34,7 @@ function createParamsForQuery(email: string, limit: number): DynamoQueryParams {
     },
     Limit: imagesLimit,
   };
-};
+}
 
 async function getCommonImages(limit: number): Promise<QueryOutput> {
   const params = createParamsForQuery(adminEmail, limit);
@@ -43,9 +43,9 @@ async function getCommonImages(limit: number): Promise<QueryOutput> {
     const data = await client.send(queryCommand);
     return removeUsersFromResponse(data.Items);
   } catch (e) {
-    throw Error(e);
+    throw Error(`Error: ${e} | class: DbService | function: getCommonImages.`);
   }
-};
+}
 
 async function getImagesForUser(email: string, limit: number): Promise<QueryOutput> {
   const params = createParamsForQuery(email, limit);
@@ -54,17 +54,17 @@ async function getImagesForUser(email: string, limit: number): Promise<QueryOutp
     const data = await client.send(queryCommand);
     return removeUsersFromResponse(data.Items);
   } catch (e) {
-    throw Error(e);
+    throw Error(`Error: ${e} | class: DbService | function: getImagesForUser.`);
   }
-};
+}
 
 async function getImagesFromDynamoDB(limit: number, currentUser: string): Promise<QueryOutput> {
-  try {  
+  try {
     const commonImages = await getCommonImages(limit);
     const userImages = await getImagesForUser(currentUser, limit);
     return commonImages.concat(userImages);
   } catch (e) {
-    throw Error(e);
+    throw Error(`Error: ${e} | class: DbService | function: getImagesFromDynamoDB.`);
   }
 }
 
@@ -87,14 +87,14 @@ export async function getFilesAmountFromDynamoDB(): Promise<number> {
     const data = await client.send(queryCommand);
     return Number(data.Count);
   } catch (e) {
-    throw Error(e);
+    throw Error(`Error: ${e} | class: DbService | function: getFilesAmountFromDynamoDB.`);
   }
 }
 
 function removeUsersFromResponse(dynamoArray: QueryOutput): QueryOutput {
   return dynamoArray.filter(function (item) {
     return String(item.ImagePath.S) !== userSortValue;
-});
+  });
 }
 
 async function hashPassword(password: string, salt: string): Promise<string> {
@@ -104,7 +104,12 @@ async function hashPassword(password: string, salt: string): Promise<string> {
 }
 
 export class DbService {
-  async uploadImageToDynamo(fileMetadata: object, filename: string, filePath: string, userEmail: string): Promise<void> {
+  async uploadImageToDynamo(
+    fileMetadata: object,
+    filename: string,
+    filePath: string,
+    userEmail: string
+  ): Promise<void> {
     const date = new Date();
     const input = {
       Item: {
@@ -131,37 +136,37 @@ export class DbService {
       const command = new PutItemCommand(input);
       await client.send(command);
     } catch (e) {
-      throw Error(`Dynamo DB error: ${e}`);
+      throw Error(`Error: ${e} | class: DbService | function: uploadImageToDynamo.`);
     }
   }
 
   async findUserInDynamo(email: string): Promise<DynamoUser> {
-  const params = {
-    TableName: dynamoTable,
-    KeyConditionExpression: 'Email = :pk and FileName = :sk',
-    ExpressionAttributeValues: {
-      ':pk': { S: email },
-      ':sk': { S: userSortValue }
+    const params = {
+      TableName: dynamoTable,
+      KeyConditionExpression: 'Email = :pk and FileName = :sk',
+      ExpressionAttributeValues: {
+        ':pk': { S: email },
+        ':sk': { S: userSortValue },
+      },
+    };
+
+    const queryCommand = new QueryCommand(params);
+
+    try {
+      const data = await client.send(queryCommand);
+      const user = data.Items![0];
+
+      return {
+        salt: user.Salt.S,
+        filename: userSortValue,
+        email: user.Email.S,
+        password: user.Password.S,
+        path: user.ImagePath.S,
+      };
+    } catch (e) {
+      throw Error(`Error: ${e} | class: DbService | function: findUserInDynamo.`);
     }
   }
-    
-  const queryCommand = new QueryCommand(params);
-
-  try {
-    const data = await client.send(queryCommand);
-    const user = data.Items![0];
-
-    return {
-      salt: user.Salt.S,
-      filename: userSortValue,
-      email: user.Email.S,
-      password: user.Password.S,
-      path: user.ImagePath.S
-    }
-  } catch (e) {
-    throw Error(e);
-  }
- }
 
   async getUserImagesNumber(userEmail: string, limit: number): Promise<number> {
     const images = await getImagesForUser(userEmail, limit);
@@ -182,12 +187,16 @@ export class DbService {
     try {
       return images.map((item) => item.ImagePath.S);
     } catch (e) {
-      throw Error(`${e} | class: DbService | function: retrieveImagesPaths.`);
+      throw Error(`Error: ${e} | class: DbService | function: retrieveImagesPaths.`);
     }
-    
   }
 
-  async getImagesFromDynamo(page: number, limit: number, pagesAmount: number, currentUser: string): Promise<IResponseWithImages> {
+  async getImagesFromDynamo(
+    page: number,
+    limit: number,
+    pagesAmount: number,
+    currentUser: string
+  ): Promise<IResponseWithImages> {
     try {
       const images: DynamoImages[] = (await getImagesFromDynamoDB(limit, currentUser)) as DynamoImages[];
       const sortedImages = this.sortImagesFromOldToNew(images);
@@ -200,7 +209,7 @@ export class DbService {
         objects: paths,
       };
     } catch (e) {
-      throw Error(`${e} | class: DbService | function: getImagesFromDynamo.`);
+      throw Error(`Error: ${e} | class: DbService | function: getImagesFromDynamo.`);
     }
   }
 
@@ -222,7 +231,7 @@ export class DbService {
         objects: paths,
       };
     } catch (e) {
-      throw Error(`${e} | class: ${this.constructor.name} | function: getImages.`);
+      throw Error(`Error: ${e} | class: DbService | function: getImages.`);
     }
   }
 
@@ -247,8 +256,8 @@ export class DbService {
     try {
       const command = new PutItemCommand(input);
       await client.send(command);
-    } catch (error) {
-      log(`Dynamo DB error: ${error}`);
+    } catch (e) {
+      throw Error(`Error: ${e} | class: DbService | function: createDynamoUser.`);
     }
   }
 }

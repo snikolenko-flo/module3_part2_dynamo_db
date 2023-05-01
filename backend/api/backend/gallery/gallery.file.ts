@@ -49,7 +49,7 @@ export class GalleryFile {
     pagesAmount: number,
     dbService: DbService,
     currentUser: string,
-    user?: string,
+    user?: string
   ): Promise<IResponseWithImages> {
     if (user) {
       log(`Get images for the user ${user}.`);
