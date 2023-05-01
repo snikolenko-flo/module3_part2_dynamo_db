@@ -8,13 +8,13 @@ import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-const client = new DynamoDBClient({ region: 'ap-northeast-1' });
-
 const defaultImagesType = 'image/jpeg';
-const fileService = new FileService();
-const bucket = 's3-bucket';
-const bucketName = 'stanislav-flo-test-bucket';
+const s3ImagesDirectory = 's3-bucket';
+const bucket = 'stanislav-flo-test-bucket';
 const dynamoTable = 'module3_part2';
+
+const client = new DynamoDBClient({ region: 'ap-northeast-1' });
+const fileService = new FileService();
 
 export class DbService {
   async startDb(imagesDir: string): Promise<void> {
@@ -151,13 +151,13 @@ export class DbService {
     const buffer = await readFile(directory + '/' + fileName);
     const metadata = fileService.getMetadata(buffer, defaultImagesType);
 
-    uploadToS3(buffer, fileName, bucket);
+    uploadToS3(buffer, fileName, s3ImagesDirectory);
     
     const client = new S3Client({});
 
     const command = new GetObjectCommand({
-      Bucket: bucketName,
-      Key: `${bucket}/${fileName}`
+      Bucket: bucket,
+      Key: `${s3ImagesDirectory}/${fileName}`
     });
    
     const url = await getSignedUrl(client, command, { expiresIn: 3600 }); // expiresIn - time in seconds for the signed URL to expire

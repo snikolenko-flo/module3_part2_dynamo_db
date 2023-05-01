@@ -2,14 +2,17 @@ import { log } from '@helper/logger';
 import { PER_PAGE } from '../data/constants.js';
 import { IResponseWithImages } from '../interfaces/response';
 import { DynamoImages } from '../interfaces/image';
-import { DynamoDBClient, QueryCommand, PutItemCommand, BatchGetItemCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, QueryCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import util from 'util';
 import * as crypto from 'crypto';
 
-const client = new DynamoDBClient({ region: 'ap-northeast-1' });
 const defaultLimit = 60;
-const dynamoTable = 'module3_part2';
-const adminEmail = 'admin@flo.team';
+const userSortValue = 'default';
+const dynamoTable = process.env.DYNAMO_TABLE;
+const adminEmail = process.env.ADMIN_EMAIL;
+const awsRegion = process.env.AWS_REGION;
+
+const client = new DynamoDBClient({ region: awsRegion });
 
 function createParamsForQuery(email: string, limit: number) {
   let imagesLimit = limit;
@@ -71,7 +74,7 @@ export async function getFilesAmountFromDynamoDB() {
       '#pk': 'Email',
     },
     ExpressionAttributeValues: {
-      ':pkval': { S: 'admin@flo.team' },
+      ':pkval': { S: adminEmail },
     },
     Select: 'COUNT',
   };
@@ -88,7 +91,7 @@ export async function getFilesAmountFromDynamoDB() {
 
 function removeUsersFromResponse(dynamoArray) {
   return dynamoArray.filter(function (item) {
-    return String(item.ImagePath.S) !== 'default';
+    return String(item.ImagePath.S) !== userSortValue;
 });
 }
 
@@ -133,15 +136,13 @@ export class DbService {
   async findUserInDynamo(email: string) {
   const params = {
     TableName: dynamoTable,
-    KeyConditionExpression: '#pk = :pkval',
-    ExpressionAttributeNames: {
-      '#pk': 'Email',
-    },
+    KeyConditionExpression: 'Email = :pk and FileName = :sk',
     ExpressionAttributeValues: {
-      ':pkval': { S: email },
+      ':pk': { S: email },
+      ':sk': { S: 'default' }
     }
-  };
-
+  }
+    
   const queryCommand = new QueryCommand(params);
 
   try {

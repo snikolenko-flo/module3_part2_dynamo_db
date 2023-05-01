@@ -11,11 +11,10 @@ import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 const secret = process.env.SECRET;
+const s3ImageDirectory = process.env.S3_IMAGE_DIRECTORY;
+const bucket = process.env.BUCKET;
+
 const fileService = new FileService();
-const bucketEndpoint = 'https://stanislav-flo-test-bucket.s3.ap-northeast-1.amazonaws.com';
-const bucket = 's3-bucket';
-const pathToBucket = `${bucketEndpoint}/${bucket}`;
-const bucketName = 'stanislav-flo-test-bucket';
 
 export const upload: APIGatewayProxyHandlerV2 = async (event) => {
   try {
@@ -29,8 +28,8 @@ export const upload: APIGatewayProxyHandlerV2 = async (event) => {
     const client = new S3Client({});
 
     const command = new GetObjectCommand({
-      Bucket: bucketName,
-      Key: `${bucket}/${filename}`
+      Bucket: bucket,
+      Key: `${s3ImageDirectory}/${filename}`
     });
    
     const s3filePath = await getSignedUrl(client, command, { expiresIn: 3600 }); // expiresIn - time in seconds for the signed URL to expire
@@ -41,7 +40,7 @@ export const upload: APIGatewayProxyHandlerV2 = async (event) => {
 
     const dbService = new DbService();
 
-    manager.uploadImageToS3(data, filename, bucket);
+    manager.uploadImageToS3(data, filename, s3ImageDirectory);
 
     await manager.uploadImageDataToDb(metadata, filename, s3filePath, userEmail, dbService);
     return createResponse(200);
