@@ -57,20 +57,20 @@ export class GalleryFile {
   ): Promise<IResponseWithImages> {
     if (user) {
       log(`Get images for the user ${user}.`);
-      return await dbService.getUserImages(pageNumber, pageLimit, pagesAmount, user);
+      return await dbService.image.getUserImages(pageNumber, pageLimit, pagesAmount, user);
     } else {
       log('Get all images.');
-      return await dbService.getImagesFromDynamo(pageNumber, pageLimit, pagesAmount, currentUser);
+      return await dbService.image.getImagesFromDynamo(pageNumber, pageLimit, pagesAmount, currentUser);
     }
   }
 
   async getNumberOfPages(limit: number, dbService: DbService, user?: string): Promise<number> {
     if (user) {
-      const userImagesNumber = await dbService.getUserImagesNumber(user, limit);
+      const userImagesNumber = await dbService.image.getUserImagesNumber(user, limit);
       return this.getNumberOfPagesForUser(userImagesNumber);
     }
 
-    const total = await this.service.getFilesAmountFromDynamoDB();
+    const total = await this.service.image.getFilesAmountFromDynamoDB();
     const totalPages = this.calculatePagesNumber(total);
 
     if (limit) {

@@ -34,7 +34,7 @@ export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
 export const getImagesLimit: APIGatewayProxyHandlerV2 = async (event) => {
   try {
     const dbService = new DbService();
-    const pageLimit = await dbService.getFilesAmountFromDynamoDB();
+    const pageLimit = await dbService.image.getFilesAmountFromDynamoDB();
     const limit = JSON.stringify({ limit: pageLimit });
     log(`Page limit ${limit} was sent to the frontend.`);
     return createResponse(200, limit);

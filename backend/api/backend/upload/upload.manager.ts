@@ -13,6 +13,6 @@ export class UploadManager {
     userEmail: string,
     dbService: DbService
   ): Promise<void> {
-    await dbService.uploadImageToDynamo(metadata, filename, s3filePath, userEmail);
+    await dbService.image.uploadImageToDynamo(metadata, filename, s3filePath, userEmail);
   }
 }

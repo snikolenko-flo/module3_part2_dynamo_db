@@ -6,7 +6,7 @@ import { DynamoUser } from '../interfaces/user';
 export class LoginUser {
   async findUser(email: string, dbService: DbService): Promise<DynamoUser> {
     try {
-      return await dbService.findUserInDynamo(email);
+      return await dbService.user.findUserInDynamo(email);
     } catch (e) {
       throw { errorMessage: 'Could not get a user from database.', statusCode: 404 };
     }
