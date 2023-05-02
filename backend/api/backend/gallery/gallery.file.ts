@@ -3,9 +3,13 @@ import { PER_PAGE } from '../data/constants.js';
 import { opendir, stat } from 'fs/promises';
 import { DbService } from '../services/db-service';
 import { IResponseWithImages } from '../interfaces/response';
-import { getFilesAmountFromDynamoDB } from '../services/db-service';
 
 export class GalleryFile {
+  service: DbService;
+
+  constructor() {
+    this.service = new DbService();
+  }
   async getFilesAmount(directory: string, counter?: number): Promise<number> {
     try {
       const dir = await opendir(directory);
@@ -66,7 +70,7 @@ export class GalleryFile {
       return this.getNumberOfPagesForUser(userImagesNumber);
     }
 
-    const total = await getFilesAmountFromDynamoDB();
+    const total = await this.service.getFilesAmountFromDynamoDB();
     const totalPages = this.calculatePagesNumber(total);
 
     if (limit) {
