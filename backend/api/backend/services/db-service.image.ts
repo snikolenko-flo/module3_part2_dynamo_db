@@ -3,6 +3,7 @@ import { IResponseWithImages } from '../interfaces/response';
 import { DynamoImages } from '../interfaces/image';
 import { DynamoDBClient, QueryCommand, PutItemCommand, QueryOutput } from '@aws-sdk/client-dynamodb';
 import { DynamoQueryParams } from '../interfaces/dynamo';
+import { DynamoOutput } from '../interfaces/dynamo';
 
 export class ImageService {
   defaultLimit: number;
@@ -43,11 +44,11 @@ export class ImageService {
   }
 
   async getUserImagesNumber(userEmail: string, limit: number): Promise<number> {
-    const images = await this.getImagesForUser(userEmail, limit);
+    const images = (await this.getImagesForUser(userEmail, limit)) as DynamoOutput;
     return images.length;
   }
 
-  removeUsersFromResponse(dynamoArray: QueryOutput): QueryOutput {
+  removeUsersFromResponse(dynamoArray: DynamoImages): DynamoOutput {
     return dynamoArray.filter(function (item) {
       return String(item.ImagePath.S) !== 'default';
     });
@@ -73,18 +74,19 @@ export class ImageService {
     };
   }
 
-  async getImagesForUser(email: string, limit: number): Promise<QueryOutput> {
+  async getImagesForUser(email: string, limit: number): Promise<DynamoImages> {
     const params = this.createParamsForQuery(email, limit);
     const queryCommand = new QueryCommand(params);
     try {
       const data = await this.client.send(queryCommand);
-      return this.removeUsersFromResponse(data.Items);
+      const dynamoImages = data.Items as DynamoImages;
+      return this.removeUsersFromResponse(dynamoImages);
     } catch (e) {
       throw Error(`Error: ${e} | class: DbService | function: getImagesForUser.`);
     }
   }
 
-  async getImagesFromDynamoDB(limit: number, currentUser: string): Promise<QueryOutput> {
+  async getImagesFromDynamoDB(limit: number, currentUser: string): Promise<DynamoImages> {
     try {
       const commonImages = await this.getCommonImages(limit);
       const userImages = await this.getImagesForUser(currentUser, limit);
@@ -94,12 +96,13 @@ export class ImageService {
     }
   }
 
-  async getCommonImages(limit: number): Promise<QueryOutput> {
+  async getCommonImages(limit: number): Promise<DynamoOutput> {
     const params = this.createParamsForQuery(this.adminEmail, limit);
     const queryCommand = new QueryCommand(params);
     try {
-      const data = await this.client.send(queryCommand);
-      return this.removeUsersFromResponse(data.Items);
+      const data = (await this.client.send(queryCommand)) as QueryOutput;
+      const dynamoImages = data.Items as DynamoImages;
+      return this.removeUsersFromResponse(dynamoImages);
     } catch (e) {
       throw Error(`Error: ${e} | class: DbService | function: getCommonImages.`);
     }
@@ -148,12 +151,12 @@ export class ImageService {
   }
 
   private sortImagesFromOldToNew(images: DynamoImages[]): DynamoImages[] {
-    return images.sort((a, b) => Number(a.Date.S) - Number(b.Date.S));
+    return images.sort((a, b) => Number(a.Date!.S) - Number(b.Date!.S));
   }
 
   private retrieveImagesPaths(images: DynamoImages[]): string[] {
     try {
-      return images.map((item) => item.ImagePath.S);
+      return images.map((item) => item.ImagePath!.S);
     } catch (e) {
       throw Error(`Error: ${e} | class: DbService | function: retrieveImagesPaths.`);
     }
@@ -166,7 +169,7 @@ export class ImageService {
     currentUser: string
   ): Promise<IResponseWithImages> {
     try {
-      const images: DynamoImages[] = (await this.getImagesFromDynamoDB(limit, currentUser)) as DynamoImages[];
+      const images = await this.getImagesFromDynamoDB(limit, currentUser);
       const sortedImages = this.sortImagesFromOldToNew(images);
       const imagesPaths = this.retrieveImagesPaths(sortedImages);
 

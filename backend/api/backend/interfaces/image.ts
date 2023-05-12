@@ -1,4 +1,4 @@
-export interface DynamoImages {
-  date?: Date;
-  path?: string;
+export interface DynamoImages extends Array<any> {
+  Date?: {S: Date};
+  ImagePath?: {S: string};
 }

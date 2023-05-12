@@ -32,10 +32,10 @@ export class UserService {
       const user = data.Items![0];
 
       return {
-        salt: user.Salt.S,
+        salt: user.Salt.S!,
         filename: this.userSortValue,
-        email: user.Email.S,
-        password: user.Password.S,
+        email: user.Email.S!,
+        password: user.Password.S!,
         path: user.ImagePath.S,
       };
     } catch (e) {
