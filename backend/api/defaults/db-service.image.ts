@@ -5,6 +5,7 @@ import { FileService } from '../backend/services/file.service';
 import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { v4 as uuidv4 } from 'uuid';
 
 export class ImageService {
   imagesType: string;
@@ -79,12 +80,19 @@ export class ImageService {
 
     const dynamoImage = {
       email: 'admin@flo.team',
+      id: uuidv4(),
+      type: 'image',
       filename: fileName,
       path: url,
       metadata: metadata,
       date: new Date(),
     };
-    await this.putImageToDynamo(dynamoImage);
+    try {
+      await this.putImageToDynamo(dynamoImage);
+    } catch (e) {
+      throw Error(`Error: ${e} | class: DbService | function: saveFile.`);
+    }
+    
   }
 
   private async putImageToDynamo(image: DynamoImage): Promise<void> {
@@ -92,6 +100,12 @@ export class ImageService {
       Item: {
         Email: {
           S: image.email,
+        },
+        ID: {
+          S: image.id,
+        },
+        Type: {
+          S: image.type,
         },
         FileName: {
           S: image.filename,
@@ -107,7 +121,7 @@ export class ImageService {
         },
       },
       TableName: this.table,
-      ConditionExpression: 'attribute_not_exists(Email) AND attribute_not_exists(FileName)',
+      //ConditionExpression: 'attribute_not_exists(Email) AND attribute_not_exists(FileName)',
     };
     try {
       const command = new PutItemCommand(input);

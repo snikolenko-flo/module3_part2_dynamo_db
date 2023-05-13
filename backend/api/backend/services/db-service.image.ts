@@ -50,7 +50,7 @@ export class ImageService {
 
   removeUsersFromResponse(dynamoArray: DynamoImages): DynamoOutput {
     return dynamoArray.filter(function (item) {
-      return String(item.ImagePath.S) !== 'default';
+      return String(item.Type.S) !== 'user';
     });
   }
 
@@ -110,6 +110,8 @@ export class ImageService {
 
   async uploadImageToDynamo(
     fileMetadata: object,
+    imageID: string,
+    type: string,
     filename: string,
     filePath: string,
     userEmail: string
@@ -119,6 +121,12 @@ export class ImageService {
       Item: {
         Email: {
           S: userEmail,
+        },
+        ID: {
+          S: imageID,
+        },
+        Type: {
+          S: type,
         },
         FileName: {
           S: filename,

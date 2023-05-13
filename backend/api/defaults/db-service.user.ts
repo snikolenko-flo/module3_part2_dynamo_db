@@ -26,11 +26,11 @@ export class UserService {
         Email: {
           S: user.email,
         },
-        FileName: {
-          S: user.filename,
+        ID: {
+          S: user.id,
         },
-        ImagePath: {
-          S: user.path,
+        Type: {
+          S: user.type,
         },
         Password: {
           S: await this.hashPassword(user.password, user.salt),

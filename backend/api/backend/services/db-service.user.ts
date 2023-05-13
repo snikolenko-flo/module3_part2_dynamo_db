@@ -1,6 +1,7 @@
 import { DynamoDBClient, QueryCommand, PutItemCommand, QueryOutput } from '@aws-sdk/client-dynamodb';
 import { DynamoUser } from '../interfaces/user';
 import { hashPassword } from './helper';
+import { v4 as uuidv4 } from 'uuid';
 
 export class UserService {
   defaultLimit: number;
@@ -16,12 +17,14 @@ export class UserService {
   }
 
   async findUserInDynamo(email: string): Promise<DynamoUser> {
+    console.log(`email: ${email}`);
+    console.log(`table: ${this.table}`);
+
     const params = {
       TableName: this.table,
-      KeyConditionExpression: 'Email = :pk and FileName = :sk',
+      KeyConditionExpression: 'Email = :pk',
       ExpressionAttributeValues: {
         ':pk': { S: email },
-        ':sk': { S: this.userSortValue },
       },
     };
 
@@ -33,10 +36,10 @@ export class UserService {
 
       return {
         salt: user.Salt.S!,
-        filename: this.userSortValue,
+        id: user.ID.S!,
+        type: user.Type.S!,
         email: user.Email.S!,
         password: user.Password.S!,
-        path: user.ImagePath.S,
       };
     } catch (e) {
       throw Error(`Error: ${e} | class: DbService | function: findUserInDynamo.`);
@@ -49,11 +52,11 @@ export class UserService {
         Email: {
           S: email,
         },
-        FileName: {
-          S: 'default',
+        ID: {
+          S: uuidv4(),
         },
-        ImagePath: {
-          S: 'default',
+        Type: {
+          S: 'user',
         },
         Password: {
           S: await hashPassword(password, salt),

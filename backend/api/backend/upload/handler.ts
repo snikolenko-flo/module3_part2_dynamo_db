@@ -9,6 +9,7 @@ import { UploadManager } from './upload.manager';
 import { FileService } from '../services/file.service';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { v4 as uuidv4 } from 'uuid';
 
 const secret = process.env.SECRET;
 const s3ImageDirectory = process.env.S3_IMAGE_DIRECTORY;
@@ -39,7 +40,10 @@ export const upload: APIGatewayProxyHandlerV2 = async (event) => {
 
     manager.uploadImageToS3(data, filename, s3ImageDirectory!);
 
-    await manager.uploadImageDataToDb(metadata, filename, s3filePath, userEmail, dbService);
+    const imageID = uuidv4();
+    const imageType = 'image';
+
+    await manager.uploadImageDataToDb(metadata, imageID, imageType, filename, s3filePath, userEmail, dbService);
     return createResponse(200);
   } catch (e) {
     return errorHandler(e);
