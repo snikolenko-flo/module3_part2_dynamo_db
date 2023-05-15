@@ -1,4 +1,4 @@
-import { DynamoDBClient, QueryCommand, PutItemCommand, QueryOutput } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, QueryCommand, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { DynamoUser } from '../interfaces/user';
 import { hashPassword } from './helper';
 import { v4 as uuidv4 } from 'uuid';

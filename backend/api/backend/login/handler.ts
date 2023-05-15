@@ -26,6 +26,9 @@ export const login: APIGatewayProxyHandlerV2 = async (event) => {
 
     const token = authService.createJWTToken(user.email, secret!);
     log('Token is created');
+
+    await manager.image.updateSingedUlrs(email);
+    log('Image urls were updated');
     return createResponse(200, { token });
   } catch (e) {
     return errorHandler(e);

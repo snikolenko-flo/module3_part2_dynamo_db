@@ -63,12 +63,7 @@ export class ImageService {
     return directory + '/' + filename;
   }
 
-  private async saveFile(directory: string, fileName: string): Promise<void> {
-    const buffer = await readFile(directory + '/' + fileName);
-    const metadata = this.file.getMetadata(buffer, this.imagesType);
-
-    uploadToS3(buffer, fileName, this.s3Directory);
-
+  private async createSignedUrl(fileName: string) {
     const client = new S3Client({});
 
     const command = new GetObjectCommand({
@@ -76,7 +71,15 @@ export class ImageService {
       Key: `${this.s3Directory}/${fileName}`,
     });
 
-    const url = await getSignedUrl(client, command, { expiresIn: 3600 }); // expiresIn - time in seconds for the signed URL to expire
+    return await getSignedUrl(client, command, { expiresIn: 120 }); // expiresIn - time in seconds for the signed URL to expire
+  }
+
+  private async saveFile(directory: string, fileName: string): Promise<void> {
+    const buffer = await readFile(directory + '/' + fileName);
+    const metadata = this.file.getMetadata(buffer, this.imagesType);
+
+    uploadToS3(buffer, fileName, this.s3Directory);
+    const url = await this.createSignedUrl(fileName);
 
     const dynamoImage = {
       email: 'admin@flo.team',
@@ -92,7 +95,6 @@ export class ImageService {
     } catch (e) {
       throw Error(`Error: ${e} | class: DbService | function: saveFile.`);
     }
-    
   }
 
   private async putImageToDynamo(image: DynamoImage): Promise<void> {

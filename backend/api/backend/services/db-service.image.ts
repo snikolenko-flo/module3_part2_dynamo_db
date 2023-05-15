@@ -1,9 +1,17 @@
 import { PER_PAGE } from '../data/constants';
 import { IResponseWithImages } from '../interfaces/response';
 import { DynamoImages } from '../interfaces/image';
-import { DynamoDBClient, QueryCommand, PutItemCommand, QueryOutput } from '@aws-sdk/client-dynamodb';
+import {
+  DynamoDBClient,
+  QueryCommand,
+  PutItemCommand,
+  QueryOutput,
+  BatchWriteItemCommand,
+} from '@aws-sdk/client-dynamodb';
 import { DynamoQueryParams } from '../interfaces/dynamo';
 import { DynamoOutput } from '../interfaces/dynamo';
+import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 export class ImageService {
   defaultLimit: number;
@@ -11,6 +19,8 @@ export class ImageService {
   client: DynamoDBClient;
   table: string;
   adminEmail: string;
+  s3ImagesDirectory: string;
+  bucket: string;
 
   constructor(dynamoTable: string, dynamoClient: DynamoDBClient) {
     this.defaultLimit = 60;
@@ -18,6 +28,8 @@ export class ImageService {
     this.client = dynamoClient;
     this.table = dynamoTable;
     this.adminEmail = 'admin@flo.team';
+    this.s3ImagesDirectory = 's3-bucket';
+    this.bucket = 'stanislav-flo-test-bucket';
   }
 
   async getFilesAmountFromDynamoDB(): Promise<number> {
@@ -106,6 +118,87 @@ export class ImageService {
     } catch (e) {
       throw Error(`Error: ${e} | class: DbService | function: getCommonImages.`);
     }
+  }
+
+  private async generateNewSignedUrls(images: DynamoImages): Promise<DynamoImages> {
+    return await Promise.all(
+      images.map(async (image) => {
+        const url = await this.createSignedUrl(image.FileName.S);
+        return {
+          email: image.Email.S,
+          id: image.ID.S,
+          type: image.Type.S,
+          filename: image.FileName.S,
+          path: url,
+          metadata: image.Metadata.S,
+          date: new Date(),
+        };
+      })
+    );
+  }
+
+  private createBatchArray(array: DynamoImages, size: number): object[] {
+    const batchSize = size;
+    const batches: object[] = [];
+
+    for (let i = 0; i < array.length; i += batchSize) {
+      batches.push(array.slice(i, i + batchSize));
+    }
+
+    return batches;
+  }
+
+  private async updateUrls(batches: DynamoImages): Promise<void> {
+    batches.map(async (item) => {
+      const requests = this.createParams(item);
+      const params = {
+        RequestItems: {
+          module3_part2: requests,
+        },
+      };
+      const client = new DynamoDBClient({});
+      await client.send(new BatchWriteItemCommand(params));
+    });
+  }
+
+  async updateSingedUlrs(email: string): Promise<void> {
+    try {
+      const images = await this.getImagesFromDynamoDB(this.defaultLimit, email);
+      const newImagesArray = await this.generateNewSignedUrls(images);
+      const batches = this.createBatchArray(newImagesArray, 25);
+      await this.updateUrls(batches);
+    } catch (e) {
+      throw Error(`Error: ${e} | e.$response: ${e.$response} | class: DbService | function: updateSignedUrls.`);
+    }
+  }
+
+  private createParams(array: DynamoImages): DynamoImages {
+    return array.map((item) => {
+      return {
+        PutRequest: {
+          Item: {
+            Email: { S: item.email },
+            ID: { S: item.id },
+            ImagePath: { S: item.path },
+            Type: { S: item.type },
+            FileName: { S: item.filename },
+            Metadata: { S: item.metadata },
+            Date: { S: item.date },
+          },
+        },
+      };
+    });
+  }
+
+  private async createSignedUrl(fileName: string) {
+    const client = new S3Client({}) as any;
+
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: `${this.s3ImagesDirectory}/${fileName}`,
+    }) as any;
+
+    return await getSignedUrl(client, command, { expiresIn: 120 }); // expiresIn - time in seconds for the signed URL to expire
   }
 
   async uploadImageToDynamo(

@@ -2,8 +2,6 @@ export interface DynamoUser {
   email: string;
   id: string;
   type: string;
-  //filename: string;
-  //path?: string;
   password: string;
   salt: string;
 }

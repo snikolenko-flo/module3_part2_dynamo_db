@@ -1,4 +1,4 @@
-import { DynamoDBClient, QueryCommand, PutItemCommand, QueryOutput } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
 import { UserService } from './db-service.user';
 import { ImageService } from './db-service.image';
 
