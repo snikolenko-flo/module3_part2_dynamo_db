@@ -17,9 +17,6 @@ export class UserService {
   }
 
   async findUserInDynamo(email: string): Promise<DynamoUser> {
-    console.log(`email: ${email}`);
-    console.log(`table: ${this.table}`);
-
     const params = {
       TableName: this.table,
       KeyConditionExpression: 'Email = :pk',
@@ -32,7 +29,9 @@ export class UserService {
 
     try {
       const data = await this.client.send(queryCommand);
-      const user = data.Items![0];
+      console.log('data');
+      console.log(data);
+      const user = data.Items![1];
 
       return {
         salt: user.Salt.S!,
@@ -42,6 +41,7 @@ export class UserService {
         password: user.Password.S!,
       };
     } catch (e) {
+      console.log(`Some error ${e}`);
       throw Error(`Error: ${e} | class: DbService | function: findUserInDynamo.`);
     }
   }

@@ -6,6 +6,7 @@ import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { v4 as uuidv4 } from 'uuid';
+import { defaultUsersArray } from './default.users';
 
 export class ImageService {
   imagesType: string;
@@ -14,6 +15,7 @@ export class ImageService {
   table: string;
   file: FileService;
   client: DynamoDBClient;
+  adminUser: string;
 
   constructor(
     defaultImagesType: string,
@@ -29,6 +31,7 @@ export class ImageService {
     this.table = dynamoTable;
     this.client = dynamoClient;
     this.file = fileService;
+    this.adminUser = 'admin';
   }
 
   async addImagesDataToDynamo(imagesDir: string): Promise<void> {
@@ -36,7 +39,7 @@ export class ImageService {
       await this.addImagesData(imagesDir);
       console.log('Images have been added to DB.');
     } catch (e) {
-      throw Error(`${e} | class: DbService | function: addImagesDataToDB.`);
+      throw Error(`${e} | class: DbService | function: addImagesDataToDynamo.`);
     }
   }
 
@@ -78,9 +81,12 @@ export class ImageService {
     const buffer = await readFile(directory + '/' + fileName);
     const metadata = this.file.getMetadata(buffer, this.imagesType);
 
-    uploadToS3(buffer, fileName, this.s3Directory);
-    const url = await this.createSignedUrl(fileName);
+    uploadToS3(buffer, `${this.adminUser}/${fileName}`, this.s3Directory);
+    const url = await this.createSignedUrl(`${this.adminUser}/${fileName}`);
 
+    console.log('url');
+    console.log(url);
+    
     const dynamoImage = {
       email: 'admin@flo.team',
       id: uuidv4(),
@@ -98,6 +104,8 @@ export class ImageService {
   }
 
   private async putImageToDynamo(image: DynamoImage): Promise<void> {
+    console.log(`image.path: ${image.path}`);
+
     const input = {
       Item: {
         Email: {

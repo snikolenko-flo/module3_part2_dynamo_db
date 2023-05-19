@@ -25,12 +25,12 @@ export const upload: APIGatewayProxyHandlerV2 = async (event) => {
     const token = event.headers.authorization;
     const decodedToken = jwt.verify(token, secret);
     const userEmail = decodedToken.user;
-
+    const user = userEmail.split('@')[0];
     const client = new S3Client({}) as any;
 
     const command = new GetObjectCommand({
       Bucket: bucket,
-      Key: `${s3ImageDirectory}/${filename}`,
+      Key: `${s3ImageDirectory}/${user}/${filename}`,
     }) as any;
 
     const s3filePath = await getSignedUrl(client, command, { expiresIn: 120 }); // expiresIn - time in seconds for the signed URL to expire
@@ -38,7 +38,7 @@ export const upload: APIGatewayProxyHandlerV2 = async (event) => {
 
     const dbService = new DbService();
 
-    manager.uploadImageToS3(data, filename, s3ImageDirectory!);
+    manager.uploadImageToS3(data, `${user}/${filename}`, s3ImageDirectory!);
 
     const imageID = uuidv4();
     const imageType = 'image';
