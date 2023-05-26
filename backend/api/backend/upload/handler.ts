@@ -3,19 +3,16 @@ import { createResponse } from '@helper/http-api/response';
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import parseMultipart from 'parse-multipart';
 import { IFileData } from '../interfaces/file';
-import { DbService } from '../services/db-service';
 import jwt from 'jsonwebtoken';
 import { UploadManager } from './upload.manager';
 import { FileService } from '../services/file.service';
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { v4 as uuidv4 } from 'uuid';
 
 const secret = process.env.SECRET;
 const s3ImageDirectory = process.env.S3_IMAGE_DIRECTORY;
 const bucket = process.env.BUCKET;
-
+const expireTime = 300;
 const fileService = new FileService();
+const dynamoTable = 'module3_part2';
 
 export const upload: APIGatewayProxyHandlerV2 = async (event) => {
   try {
@@ -26,24 +23,20 @@ export const upload: APIGatewayProxyHandlerV2 = async (event) => {
     const decodedToken = jwt.verify(token, secret);
     const userEmail = decodedToken.user;
     const user = userEmail.split('@')[0];
-    const client = new S3Client({}) as any;
 
-    const command = new GetObjectCommand({
-      Bucket: bucket,
-      Key: `${s3ImageDirectory}/${user}/${filename}`,
-    }) as any;
+    const signedUrl = await manager.createSignedUrl(bucket!,`${s3ImageDirectory}/${user}/${filename}`, expireTime);
+    const imageMetadata = manager.getMetadata(fileService, data, type);
+    const imageArray = await manager.getImageArray(userEmail, dynamoTable);
 
-    const s3filePath = await getSignedUrl(client, command, { expiresIn: 120 }); // expiresIn - time in seconds for the signed URL to expire
-    const metadata = fileService.getMetadata(data, type);
+    imageArray.push({
+      filename: filename, 
+      url: signedUrl,
+      metadata: imageMetadata,
+      date: new Date(),
+    });
 
-    const dbService = new DbService();
-
-    manager.uploadImageToS3(data, `${user}/${filename}`, s3ImageDirectory!);
-
-    const imageID = uuidv4();
-    const imageType = 'image';
-
-    await manager.uploadImageDataToDb(metadata, imageID, imageType, filename, s3filePath, userEmail, dbService);
+    await manager.updateDynamoUser(userEmail, dynamoTable, imageArray);
+    await manager.uploadImageToS3(data, `${user}/${filename}`, s3ImageDirectory!);
     return createResponse(200);
   } catch (e) {
     return errorHandler(e);

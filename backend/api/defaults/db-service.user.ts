@@ -26,12 +26,6 @@ export class UserService {
         Email: {
           S: user.email,
         },
-        ID: {
-          S: user.id,
-        },
-        Type: {
-          S: user.type,
-        },
         Password: {
           S: await this.hashPassword(user.password, user.salt),
         },

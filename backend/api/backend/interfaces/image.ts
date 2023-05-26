@@ -1,4 +1,15 @@
 export interface DynamoImages extends Array<any> {
-  Date?: { S: Date };
-  ImagePath?: { S: string };
+  filename: { S: string };
+  url: { S: string };
+  metadata: { S: string};
+  date: { S: string};
 }
+
+export interface ImageObject {
+  filename: string; 
+  url: string;
+  metadata: object;
+  date: Date;
+}
+
+export interface ImageArray extends Array<ImageObject> {}

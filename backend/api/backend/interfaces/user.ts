@@ -1,7 +1,5 @@
 export interface DynamoUser {
   email: string;
-  id: string;
-  type: string;
   password: string;
   salt: string;
 }
@@ -14,4 +12,9 @@ export interface DynamoImage {
   path: string;
   metadata: object;
   date: Date;
+}
+
+export interface DynamoObject {
+  email: string;
+  imageArray: object[];
 }

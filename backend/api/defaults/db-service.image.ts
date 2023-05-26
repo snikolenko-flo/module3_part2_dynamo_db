@@ -1,12 +1,10 @@
 import { opendir, readFile } from 'fs/promises';
 import { uploadToS3 } from '../backend/services/s3.service';
-import { DynamoImage } from '../backend/interfaces/user';
+import { ImageObject, ImageArray } from '../backend/interfaces/image';
 import { FileService } from '../backend/services/file.service';
-import { DynamoDBClient, PutItemCommand } from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { v4 as uuidv4 } from 'uuid';
-import { defaultUsersArray } from './default.users';
 
 export class ImageService {
   imagesType: string;
@@ -16,6 +14,7 @@ export class ImageService {
   file: FileService;
   client: DynamoDBClient;
   adminUser: string;
+  expirationTime: number;
 
   constructor(
     defaultImagesType: string,
@@ -32,109 +31,79 @@ export class ImageService {
     this.client = dynamoClient;
     this.file = fileService;
     this.adminUser = 'admin';
+    this.expirationTime = 300;
   }
 
-  async addImagesDataToDynamo(imagesDir: string): Promise<void> {
+  async addImagesDataToDynamo(directory: string): Promise<void> {
     try {
-      await this.addImagesData(imagesDir);
-      console.log('Images have been added to DB.');
-    } catch (e) {
-      throw Error(`${e} | class: DbService | function: addImagesDataToDynamo.`);
-    }
-  }
-
-  private async addImagesData(directory: string): Promise<void> {
-    try {
-      const dir = await opendir(directory);
-      for await (const file of dir) {
-        if (file.name.startsWith('.')) continue;
-        const fullPath = this.createFullPath(directory, file.name);
-        const isDir = await this.file.isDirectory(fullPath);
-
-        if (isDir) {
-          await this.addImagesData(fullPath);
-        } else {
-          await this.saveFile(directory, file.name);
-        }
-      }
+      const imageArray = await this.createImageArray(directory);
+      await this.updateDynamoUser("admin@flo.team", imageArray);
     } catch (e) {
       throw Error(`Error: ${e} | class: DbService | function: addImagesData.`);
     }
+  }
+
+  private async createImageArray(directory: string, recursiveImageArray?: ImageArray): Promise<ImageArray> {
+    let imageArray;
+    if (recursiveImageArray) {
+      imageArray = recursiveImageArray;
+    } else {
+      imageArray = [];
+    }
+    const dir = await opendir(directory);
+    for await (const file of dir) {
+      if (file.name.startsWith('.')) continue;
+      const fullPath = this.createFullPath(directory, file.name);
+      const isDir = await this.file.isDirectory(fullPath);
+      if (isDir) {
+        await this.createImageArray(fullPath, imageArray);
+      } else {
+        const image = await this.createImageObject(directory, file.name);
+        imageArray.push(image);
+      }
+    }
+   return imageArray;
   }
 
   private createFullPath(directory: string, filename: string): string {
     return directory + '/' + filename;
   }
 
-  private async createSignedUrl(fileName: string) {
+  private async createSignedUrl(fileName: string): Promise<string> {
     const client = new S3Client({});
-
     const command = new GetObjectCommand({
       Bucket: this.bucket,
       Key: `${this.s3Directory}/${fileName}`,
     });
-
-    return await getSignedUrl(client, command, { expiresIn: 120 }); // expiresIn - time in seconds for the signed URL to expire
+    return await getSignedUrl(client, command, { expiresIn: this.expirationTime });
   }
 
-  private async saveFile(directory: string, fileName: string): Promise<void> {
+  private async createImageObject(directory: string, fileName: string): Promise<ImageObject> {
+    const link = await this.createSignedUrl(`${this.adminUser}/${fileName}`);
     const buffer = await readFile(directory + '/' + fileName);
-    const metadata = this.file.getMetadata(buffer, this.imagesType);
-
-    uploadToS3(buffer, `${this.adminUser}/${fileName}`, this.s3Directory);
-    const url = await this.createSignedUrl(`${this.adminUser}/${fileName}`);
-
-    console.log('url');
-    console.log(url);
-    
-    const dynamoImage = {
-      email: 'admin@flo.team',
-      id: uuidv4(),
-      type: 'image',
-      filename: fileName,
-      path: url,
-      metadata: metadata,
+    const imageMetadata = this.file.getMetadata(buffer, this.imagesType);
+    await uploadToS3(buffer, `${this.adminUser}/${fileName}`, this.s3Directory);
+    return {
+      filename: fileName, 
+      url: link,
+      metadata: imageMetadata,
       date: new Date(),
-    };
-    try {
-      await this.putImageToDynamo(dynamoImage);
-    } catch (e) {
-      throw Error(`Error: ${e} | class: DbService | function: saveFile.`);
     }
   }
 
-  private async putImageToDynamo(image: DynamoImage): Promise<void> {
-    console.log(`image.path: ${image.path}`);
-
-    const input = {
-      Item: {
-        Email: {
-          S: image.email,
-        },
-        ID: {
-          S: image.id,
-        },
-        Type: {
-          S: image.type,
-        },
-        FileName: {
-          S: image.filename,
-        },
-        ImagePath: {
-          S: image.path,
-        },
-        Metadata: {
-          S: JSON.stringify(image.metadata),
-        },
-        Date: {
-          S: image.date.toString(),
-        },
-      },
+  private async updateDynamoUser(userEmail: string, arrayOfImages: ImageArray): Promise<void> {
+    const params = {
       TableName: this.table,
-      //ConditionExpression: 'attribute_not_exists(Email) AND attribute_not_exists(FileName)',
+      Key: {
+        Email: { S: userEmail },
+      },
+      UpdateExpression: "SET Images = :value",
+      ExpressionAttributeValues: {
+        ":value": { S: JSON.stringify(arrayOfImages) },
+      },
     };
     try {
-      const command = new PutItemCommand(input);
+      const command = new UpdateItemCommand(params);
       await this.client.send(command);
     } catch (e) {
       throw Error(`Error: ${e} | class: DbService | function: putImageToDynamo.`);

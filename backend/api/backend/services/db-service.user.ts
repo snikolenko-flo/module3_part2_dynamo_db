@@ -29,19 +29,14 @@ export class UserService {
 
     try {
       const data = await this.client.send(queryCommand);
-      console.log('data');
-      console.log(data);
-      const user = data.Items![1];
+      const user = data.Items![0];
 
       return {
-        salt: user.Salt.S!,
-        id: user.ID.S!,
-        type: user.Type.S!,
         email: user.Email.S!,
         password: user.Password.S!,
+        salt: user.Salt.S!,
       };
     } catch (e) {
-      console.log(`Some error ${e}`);
       throw Error(`Error: ${e} | class: DbService | function: findUserInDynamo.`);
     }
   }
