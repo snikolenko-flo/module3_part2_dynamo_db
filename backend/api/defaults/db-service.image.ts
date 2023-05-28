@@ -37,7 +37,7 @@ export class ImageService {
   async addImagesDataToDynamo(directory: string): Promise<void> {
     try {
       const imageArray = await this.createImageArray(directory);
-      await this.updateDynamoUser("admin@flo.team", imageArray);
+      await this.updateDynamoUser('admin@flo.team', imageArray);
     } catch (e) {
       throw Error(`Error: ${e} | class: DbService | function: addImagesData.`);
     }
@@ -62,7 +62,7 @@ export class ImageService {
         imageArray.push(image);
       }
     }
-   return imageArray;
+    return imageArray;
   }
 
   private createFullPath(directory: string, filename: string): string {
@@ -79,16 +79,15 @@ export class ImageService {
   }
 
   private async createImageObject(directory: string, fileName: string): Promise<ImageObject> {
-    const link = await this.createSignedUrl(`${this.adminUser}/${fileName}`);
     const buffer = await readFile(directory + '/' + fileName);
     const imageMetadata = this.file.getMetadata(buffer, this.imagesType);
     await uploadToS3(buffer, `${this.adminUser}/${fileName}`, this.s3Directory);
     return {
-      filename: fileName, 
-      url: link,
+      filename: fileName,
+      user: this.adminUser,
       metadata: imageMetadata,
       date: new Date(),
-    }
+    };
   }
 
   private async updateDynamoUser(userEmail: string, arrayOfImages: ImageArray): Promise<void> {
@@ -97,9 +96,9 @@ export class ImageService {
       Key: {
         Email: { S: userEmail },
       },
-      UpdateExpression: "SET Images = :value",
+      UpdateExpression: 'SET Images = :value',
       ExpressionAttributeValues: {
-        ":value": { S: JSON.stringify(arrayOfImages) },
+        ':value': { S: JSON.stringify(arrayOfImages) },
       },
     };
     try {

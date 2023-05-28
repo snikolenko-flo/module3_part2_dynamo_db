@@ -9,8 +9,6 @@ import { FileService } from '../services/file.service';
 
 const secret = process.env.SECRET;
 const s3ImageDirectory = process.env.S3_IMAGE_DIRECTORY;
-const bucket = process.env.BUCKET;
-const expireTime = 300;
 const fileService = new FileService();
 const dynamoTable = 'module3_part2';
 
@@ -24,13 +22,12 @@ export const upload: APIGatewayProxyHandlerV2 = async (event) => {
     const userEmail = decodedToken.user;
     const user = userEmail.split('@')[0];
 
-    const signedUrl = await manager.createSignedUrl(bucket!,`${s3ImageDirectory}/${user}/${filename}`, expireTime);
     const imageMetadata = manager.getMetadata(fileService, data, type);
     const imageArray = await manager.getImageArray(userEmail, dynamoTable);
 
     imageArray.push({
-      filename: filename, 
-      url: signedUrl,
+      filename: filename,
+      user: user,
       metadata: imageMetadata,
       date: new Date(),
     });

@@ -2,12 +2,20 @@ import { createResponse } from '@helper/http-api/response';
 import { APIGatewayProxyResult } from 'aws-lambda/trigger/api-gateway-proxy';
 import { GalleryFile } from './gallery.file.js';
 import { DbService } from '../services/db-service';
+import { ImageService } from '../services/db-service.image';
+import { DynamoDBClient } from '@aws-sdk/client-dynamodb';
+
+const dynamoTable = process.env.DYNAMO_TABLE;
+const awsRegion = process.env.AWS_REGION;
+const client = new DynamoDBClient({ region: awsRegion });
 
 export class GalleryManager {
   file: GalleryFile;
+  image: ImageService;
 
   constructor() {
     this.file = new GalleryFile();
+    this.image = new ImageService(dynamoTable!, client);
   }
 
   async getGallery(

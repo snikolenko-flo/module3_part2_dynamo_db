@@ -1,12 +1,7 @@
 import { PER_PAGE } from '../data/constants';
 import { IResponseWithImages } from '../interfaces/response';
 import { DynamoImages } from '../interfaces/image';
-import {
-  DynamoDBClient,
-  QueryCommand,
-  QueryOutput,
-  BatchWriteItemCommand,
-} from '@aws-sdk/client-dynamodb';
+import { DynamoDBClient, QueryCommand, QueryOutput } from '@aws-sdk/client-dynamodb';
 import { DynamoQueryParams } from '../interfaces/dynamo';
 import { DynamoOutput } from '../interfaces/dynamo';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
@@ -32,7 +27,6 @@ export class ImageService {
   }
 
   async getFilesAmountFromDynamoDB(): Promise<number> {
-    console.log('getFilesAmountFromDynamoDB');
     const params = {
       TableName: this.table,
       KeyConditionExpression: '#pk = :pkval',
@@ -41,16 +35,13 @@ export class ImageService {
       },
       ExpressionAttributeValues: {
         ':pkval': { S: this.adminEmail },
-      }
+      },
     };
-
     const queryCommand = new QueryCommand(params);
-
     try {
       const data = await this.client.send(queryCommand);
       const imagesArray = JSON.parse(data.Items![0].Images.S!);
-      const urls = this.retrieveImagesPaths(imagesArray);
-      return Number(urls.length);
+      return Number(imagesArray.length);
     } catch (e) {
       throw Error(`Error: ${e} | class: ImageService | function: getFilesAmountFromDynamoDB.`);
     }
@@ -63,11 +54,9 @@ export class ImageService {
 
   createParamsForQuery(email: string, limit: number): DynamoQueryParams {
     let imagesLimit = limit;
-
     if (limit <= 0) {
       imagesLimit = this.defaultLimit;
     }
-
     return {
       TableName: this.table,
       KeyConditionExpression: '#pk = :pkval',
@@ -86,10 +75,10 @@ export class ImageService {
     const queryCommand = new QueryCommand(params);
     try {
       const data = await this.client.send(queryCommand);
-      if("Images" in data.Items![0]) {
+      if ('Images' in data.Items![0]) {
         const dynamoImages = data.Items![0].Images.S; //as DynamoImages
         const imagesOnly = JSON.parse(dynamoImages!) as DynamoImages;
-        return imagesOnly; 
+        return imagesOnly;
       } else {
         return [];
       }
@@ -104,7 +93,7 @@ export class ImageService {
       const userImages = await this.getImagesForUser(currentUser, limit);
       const allImages = commonImages.concat(userImages) as DynamoImages;
       return allImages;
-      } catch (e) {
+    } catch (e) {
       throw Error(`Error: ${e} | class: DbService | function: getImagesFromDynamoDB.`);
     }
   }
@@ -114,7 +103,7 @@ export class ImageService {
     const queryCommand = new QueryCommand(params);
     try {
       const data = (await this.client.send(queryCommand)) as QueryOutput;
-      const dynamoImages = data.Items![0].Images.S; 
+      const dynamoImages = data.Items![0].Images.S;
       const imagesOnly = JSON.parse(dynamoImages!) as DynamoImages;
       return imagesOnly;
     } catch (e) {
@@ -122,85 +111,14 @@ export class ImageService {
     }
   }
 
-  private async generateNewSignedUrls(images: DynamoImages): Promise<DynamoImages> {
-    return await Promise.all(
-      images.map(async (image) => {
-        const url = await this.createSignedUrl(image.FileName.S);
-        return {
-          email: image.Email.S,
-          id: image.ID.S,
-          type: image.Type.S,
-          filename: image.FileName.S,
-          path: url,
-          metadata: image.Metadata.S,
-          date: new Date(),
-        };
-      })
-    );
-  }
-
-  private createBatchArray(array: DynamoImages, size: number): object[] {
-    const batchSize = size;
-    const batches: object[] = [];
-
-    for (let i = 0; i < array.length; i += batchSize) {
-      batches.push(array.slice(i, i + batchSize));
-    }
-
-    return batches;
-  }
-
-  private async updateUrls(batches: DynamoImages): Promise<void> {
-    batches.map(async (item) => {
-      const requests = this.createParams(item);
-      const params = {
-        RequestItems: {
-          module3_part2: requests,
-        },
-      };
-      const client = new DynamoDBClient({});
-      await client.send(new BatchWriteItemCommand(params));
-    });
-  }
-
-  async updateSingedUlrs(email: string): Promise<void> {
-    try {
-      const images = await this.getImagesFromDynamoDB(this.defaultLimit, email);
-      const newImagesArray = await this.generateNewSignedUrls(images);
-      const batches = this.createBatchArray(newImagesArray, 25);
-      await this.updateUrls(batches);
-    } catch (e) {
-      throw Error(`Error: ${e} | e.$response: ${e.$response} | class: DbService | function: updateSignedUrls.`);
-    }
-  }
-
-  private createParams(array: DynamoImages): DynamoImages {
-    return array.map((item) => {
-      return {
-        PutRequest: {
-          Item: {
-            Email: { S: item.email },
-            ID: { S: item.id },
-            ImagePath: { S: item.path },
-            Type: { S: item.type },
-            FileName: { S: item.filename },
-            Metadata: { S: item.metadata },
-            Date: { S: item.date },
-          },
-        },
-      };
-    });
-  }
-
-  private async createSignedUrl(fileName: string) {
+  private async createSignedUrl(fileName: string): Promise<string> {
     const client = new S3Client({}) as any;
-
     const command = new GetObjectCommand({
       Bucket: this.bucket,
       Key: `${this.s3ImagesDirectory}/${fileName}`,
     }) as any;
-
-    return await getSignedUrl(client, command, { expiresIn: 120 }); // expiresIn - time in seconds for the signed URL to expire
+    const seconds = 120;
+    return await getSignedUrl(client, command, { expiresIn: seconds });
   }
 
   private getImagesPerPage(images: string[], page: number, perPage: number): string[] {
@@ -217,14 +135,6 @@ export class ImageService {
     }
   }
 
-  private retrieveImagesPaths(images: DynamoImages[]): string[] {
-    try {
-      return images.map((item) => item.url);
-    } catch (e) {
-      throw Error(`Error: ${e} | class: ImageService | function: retrieveImagesPaths.`);
-    }
-  }
-
   async getImagesFromDynamo(
     page: number,
     limit: number,
@@ -234,15 +144,26 @@ export class ImageService {
     try {
       const images = await this.getImagesFromDynamoDB(limit, currentUser);
       const sortedImages = this.sortImagesFromOldToNew(images);
-      const imagesPaths = this.retrieveImagesPaths(sortedImages);
-      const paths = this.getImagesPerPage(imagesPaths, page, PER_PAGE);
-
+      const signedImageUrls = await this.createSingedUlrs(sortedImages);
+      const paths = this.getImagesPerPage(signedImageUrls, page, PER_PAGE);
       return {
         total: pagesAmount,
         objects: paths,
       };
     } catch (e) {
       throw Error(`Error: ${e} | class: DbService | function: getImagesFromDynamo.`);
+    }
+  }
+
+  private async createSingedUlrs(images: DynamoImages[]): Promise<string[]> {
+    try {
+      return await Promise.all(
+        images.map(async (item) => {
+          return await this.createSignedUrl(`${item.user}/${item.filename}`);
+        })
+      );
+    } catch (e) {
+      throw Error(`Error: ${e} | e.$response: ${e.$response} | class: DbService | function: updateSignedUrls.`);
     }
   }
 
@@ -255,10 +176,8 @@ export class ImageService {
     try {
       const images = await this.getImagesForUser(userEmail!, limit);
       const sortedImages = this.sortImagesFromOldToNew(images);
-      const imagesPaths = this.retrieveImagesPaths(sortedImages);
-
-      const paths = this.getImagesPerPage(imagesPaths, page, PER_PAGE);
-
+      const signedImageUrls = await this.createSingedUlrs(sortedImages);
+      const paths = this.getImagesPerPage(signedImageUrls, page, PER_PAGE);
       return {
         total: pagesAmount,
         objects: paths,
