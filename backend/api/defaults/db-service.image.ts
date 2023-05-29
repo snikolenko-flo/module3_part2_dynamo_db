@@ -3,8 +3,6 @@ import { uploadToS3 } from '../backend/services/s3.service';
 import { ImageObject, ImageArray } from '../backend/interfaces/image';
 import { FileService } from '../backend/services/file.service';
 import { DynamoDBClient, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
-import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 export class ImageService {
   imagesType: string;
@@ -67,15 +65,6 @@ export class ImageService {
 
   private createFullPath(directory: string, filename: string): string {
     return directory + '/' + filename;
-  }
-
-  private async createSignedUrl(fileName: string): Promise<string> {
-    const client = new S3Client({});
-    const command = new GetObjectCommand({
-      Bucket: this.bucket,
-      Key: `${this.s3Directory}/${fileName}`,
-    });
-    return await getSignedUrl(client, command, { expiresIn: this.expirationTime });
   }
 
   private async createImageObject(directory: string, fileName: string): Promise<ImageObject> {

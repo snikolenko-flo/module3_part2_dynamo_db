@@ -70,7 +70,7 @@ export class GalleryFile {
       return this.getNumberOfPagesForUser(userImagesNumber);
     }
 
-    const total = await this.service.image.getFilesAmountFromDynamoDB();
+    const total = await this.service.image.getCommonImagesAmountFromDB();
     const totalPages = this.calculatePagesNumber(total);
 
     if (limit) {

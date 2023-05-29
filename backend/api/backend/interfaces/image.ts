@@ -1,9 +1,9 @@
 export interface DynamoImages extends Array<any> {
-  filename: { S: string };
-  user: { S: string };
-  url: { S: string };
-  metadata: { S: string };
-  date: { S: string };
+  filename: string;
+  user: string;
+  url: string;
+  metadata: string;
+  date: string;
 }
 
 export interface ImageObject {

@@ -36,7 +36,7 @@ export class UserService {
         salt: user.Salt.S!,
       };
     } catch (e) {
-      throw Error(`Error: ${e} | class: DbService | function: findUserInDynamo.`);
+      throw Error(`Error: ${e} | class: UserService | function: findUserInDynamo.`);
     }
   }
 
@@ -59,7 +59,7 @@ export class UserService {
       const command = new PutItemCommand(input);
       await this.client.send(command);
     } catch (e) {
-      throw Error(`Error: ${e} | class: DbService | function: addUser.`);
+      throw Error(`Error: ${e} | class: UserService | function: createDynamoUser.`);
     }
   }
 }

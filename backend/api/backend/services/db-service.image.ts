@@ -1,6 +1,6 @@
 import { PER_PAGE } from '../data/constants';
 import { IResponseWithImages } from '../interfaces/response';
-import { DynamoImages } from '../interfaces/image';
+import { DynamoImages, ImageArray } from '../interfaces/image';
 import { DynamoDBClient, QueryCommand, QueryOutput } from '@aws-sdk/client-dynamodb';
 import { DynamoQueryParams } from '../interfaces/dynamo';
 import { DynamoOutput } from '../interfaces/dynamo';
@@ -26,7 +26,18 @@ export class ImageService {
     this.bucket = 'stanislav-flo-test-bucket';
   }
 
-  async getFilesAmountFromDynamoDB(): Promise<number> {
+  async getAmountOfItemsFromDynamo(user: string): Promise<number> {
+    try {
+      const commonImages = await this.getCommonImages();
+      const userImages = await this.getImagesForUser(user);
+      const imagesArray = commonImages.concat(userImages);
+      return Number(imagesArray.length);
+    } catch (e) {
+      throw Error(`Error: ${e} | class: ImageService | function: getFilesAmountFromDynamoDB.`);
+    }
+  }
+
+  async getCommonImagesAmountFromDB(): Promise<number> {
     const params = {
       TableName: this.table,
       KeyConditionExpression: '#pk = :pkval',
@@ -52,9 +63,22 @@ export class ImageService {
     return images.length;
   }
 
-  createParamsForQuery(email: string, limit: number): DynamoQueryParams {
+  createParamsForQuery(email: string, limit?: number): DynamoQueryParams {
     let imagesLimit = limit;
-    if (limit <= 0) {
+
+    if (limit === undefined) {
+      return {
+        TableName: this.table,
+        KeyConditionExpression: '#pk = :pkval',
+        ExpressionAttributeNames: {
+          '#pk': 'Email',
+        },
+        ExpressionAttributeValues: {
+          ':pkval': { S: email },
+        },
+        Limit: imagesLimit,
+      };
+    } else if (limit <= 0) {
       imagesLimit = this.defaultLimit;
     }
     return {
@@ -70,20 +94,25 @@ export class ImageService {
     };
   }
 
-  async getImagesForUser(email: string, limit: number): Promise<DynamoImages> {
-    const params = this.createParamsForQuery(email, limit);
+  async getImagesForUser(email: string, limit?: number): Promise<DynamoImages | []> {
+    let params;
+    if (limit) {
+      params = this.createParamsForQuery(email, limit);
+    } else {
+      params = this.createParamsForQuery(email);
+    }
     const queryCommand = new QueryCommand(params);
     try {
       const data = await this.client.send(queryCommand);
       if ('Images' in data.Items![0]) {
-        const dynamoImages = data.Items![0].Images.S; //as DynamoImages
+        const dynamoImages = data.Items![0].Images.S;
         const imagesOnly = JSON.parse(dynamoImages!) as DynamoImages;
         return imagesOnly;
       } else {
         return [];
       }
     } catch (e) {
-      throw Error(`Error: ${e} | class: DbService | function: getImagesForUser.`);
+      throw Error(`Error: ${e} | class: ImageService | function: getImagesForUser.`);
     }
   }
 
@@ -94,12 +123,17 @@ export class ImageService {
       const allImages = commonImages.concat(userImages) as DynamoImages;
       return allImages;
     } catch (e) {
-      throw Error(`Error: ${e} | class: DbService | function: getImagesFromDynamoDB.`);
+      throw Error(`Error: ${e} | class: ImageService | function: getImagesFromDynamoDB.`);
     }
   }
 
-  async getCommonImages(limit: number): Promise<DynamoOutput> {
-    const params = this.createParamsForQuery(this.adminEmail, limit);
+  async getCommonImages(limit?: number): Promise<DynamoOutput> {
+    let params;
+    if (limit) {
+      params = this.createParamsForQuery(this.adminEmail, limit);
+    } else {
+      params = this.createParamsForQuery(this.adminEmail);
+    }
     const queryCommand = new QueryCommand(params);
     try {
       const data = (await this.client.send(queryCommand)) as QueryOutput;
@@ -107,7 +141,7 @@ export class ImageService {
       const imagesOnly = JSON.parse(dynamoImages!) as DynamoImages;
       return imagesOnly;
     } catch (e) {
-      throw Error(`Error: ${e} | class: DbService | function: getCommonImages.`);
+      throw Error(`Error: ${e} | class: ImageService | function: getCommonImages.`);
     }
   }
 
@@ -127,9 +161,11 @@ export class ImageService {
     return images.slice(start, endIndex);
   }
 
-  private sortImagesFromOldToNew(images: DynamoImages[]): DynamoImages[] {
+  private sortImagesFromOldToNew(images: ImageArray): ImageArray {
     try {
-      return images.sort((a, b) => Number(new Date(a.date)) - Number(new Date(b.date)));
+      return images.sort((a, b) => {
+        return Number(new Date(a.date)) - Number(new Date(b.date));
+      });
     } catch (e) {
       throw Error(`Error: ${e} | class: ImageService | function: sortImagesFromOldToNew.`);
     }
@@ -151,11 +187,11 @@ export class ImageService {
         objects: paths,
       };
     } catch (e) {
-      throw Error(`Error: ${e} | class: DbService | function: getImagesFromDynamo.`);
+      throw Error(`Error: ${e} | class: ImageService | function: getImagesFromDynamo.`);
     }
   }
 
-  private async createSingedUlrs(images: DynamoImages[]): Promise<string[]> {
+  private async createSingedUlrs(images: ImageArray): Promise<string[]> {
     try {
       return await Promise.all(
         images.map(async (item) => {
@@ -163,7 +199,7 @@ export class ImageService {
         })
       );
     } catch (e) {
-      throw Error(`Error: ${e} | e.$response: ${e.$response} | class: DbService | function: updateSignedUrls.`);
+      throw Error(`Error: ${e} | e.$response: ${e.$response} | class: ImageService | function: createSignedUrls.`);
     }
   }
 
@@ -183,7 +219,7 @@ export class ImageService {
         objects: paths,
       };
     } catch (e) {
-      throw Error(`Error: ${e} | class: DbService | function: getImages.`);
+      throw Error(`Error: ${e} | class: ImageService | function: getUserImages.`);
     }
   }
 }
