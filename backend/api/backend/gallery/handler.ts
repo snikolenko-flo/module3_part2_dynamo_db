@@ -2,11 +2,12 @@ import { errorHandler } from '@helper/http-api/error-handler';
 import { createResponse } from '@helper/http-api/response';
 import { log } from '@helper/logger';
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
-import { DbService } from '../services/db-service';
 import { GalleryManager } from './gallery.manager';
 import jwt from 'jsonwebtoken';
+import { DynamoDB } from '../services/dynamo.service';
 
 const secret = process.env.SECRET;
+const dbService = new DynamoDB();
 
 export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
   try {
@@ -24,7 +25,6 @@ export const getGallery: APIGatewayProxyHandlerV2 = async (event) => {
     if (isNaN(pageNumber)) return createResponse(400, { message: 'The page number should be an integer' });
     if (!isFinite(pageNumber)) return createResponse(400, { message: 'The page number should be a finite integer' });
 
-    const dbService = new DbService();
     return await manager.getGallery(user!, pageNumber, pageLimit, dbService, currentUser);
   } catch (e) {
     return errorHandler(e);
@@ -37,8 +37,7 @@ export const getImagesLimit: APIGatewayProxyHandlerV2 = async (event) => {
     const decodedToken = jwt.verify(token, secret);
     const currentUser = decodedToken.user;
 
-    const dbService = new DbService();
-    const pageLimit = await dbService.image.getAmountOfItemsFromDynamo(currentUser);
+    const pageLimit = await dbService.getNumberOfAllImages(currentUser);
     const limit = JSON.stringify({ limit: pageLimit });
     log(`Page limit ${limit} was sent to the frontend.`);
     return createResponse(200, limit);

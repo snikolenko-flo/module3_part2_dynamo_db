@@ -1,6 +1,5 @@
 import { uploadToS3 } from '../services/s3.service';
-import { ImageArray } from '../interfaces/image';
-import { DynamoDBClient, GetItemCommand, UpdateItemCommand } from '@aws-sdk/client-dynamodb';
+import { ImagesArray } from '../interfaces/image';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { FileService } from '../services/file.service';
@@ -10,45 +9,19 @@ export class UploadManager {
     uploadToS3(data, filename, bucket);
   }
 
-  async getImageArray(userEmail: string, table: string): Promise<ImageArray> {
-    const params = {
-      TableName: table,
-      Key: {
-        Email: { S: userEmail },
-      },
-    };
-    const client = new DynamoDBClient({});
-    const command = new GetItemCommand(params);
+  async getImagesArray(userEmail: string, dbService: any): Promise<ImagesArray> {
     try {
-      const data = await client.send(command);
-      if ('Images' in data.Item!) {
-        const dynamoImages = data.Item.Images.S;
-        return JSON.parse(dynamoImages!) as ImageArray;
-      } else {
-        return [];
-      }
+      return await dbService.getImagesArray(userEmail);
     } catch (e) {
-      throw Error(`Error: ${e} | class: UploadManager | function: getImageArray.`);
+      throw Error(`Error: ${e} function: getImageArray.`);
     }
   }
 
-  async updateDynamoUser(userEmail: string, table: string, arrayOfImages: ImageArray): Promise<void> {
-    const params = {
-      TableName: table,
-      Key: {
-        Email: { S: userEmail },
-      },
-      UpdateExpression: 'SET Images = :value',
-      ExpressionAttributeValues: {
-        ':value': { S: JSON.stringify(arrayOfImages) },
-      },
-    };
-    const client = new DynamoDBClient({});
+  async updateUserInDB(userEmail: string, arrayOfImages: ImagesArray, dbService: any): Promise<void> {
     try {
-      const command = new UpdateItemCommand(params);
-      client.send(command);
+      return await dbService.updateUserInDB(userEmail, arrayOfImages);
     } catch (e) {
-      throw Error(`Error: ${e} | class: DbService | function: putImageToDynamo.`);
+      throw Error(`Error: ${e} function: updateUserInDB.`);
     }
   }
 

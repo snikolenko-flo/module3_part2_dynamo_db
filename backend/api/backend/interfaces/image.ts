@@ -13,4 +13,4 @@ export interface ImageObject {
   date: Date;
 }
 
-export interface ImageArray extends Array<ImageObject> {}
+export interface ImagesArray extends Array<ImageObject> {}

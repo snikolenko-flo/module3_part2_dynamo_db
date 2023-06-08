@@ -1,15 +1,10 @@
 import { log } from '@helper/logger';
 import { PER_PAGE } from '../data/constants.js';
 import { opendir, stat } from 'fs/promises';
-import { DbService } from '../services/db-service';
-import { IResponseWithImages } from '../interfaces/response';
+import { IResponseWithImages } from '../interfaces/response.js';
+import { DynamoDB } from '../services/dynamo.service.js';
 
-export class GalleryFile {
-  service: DbService;
-
-  constructor() {
-    this.service = new DbService();
-  }
+export class GalleryService {
   async getFilesAmount(directory: string, counter?: number): Promise<number> {
     try {
       const dir = await opendir(directory);
@@ -51,26 +46,26 @@ export class GalleryFile {
     pageNumber: number,
     pageLimit: number,
     pagesAmount: number,
-    dbService: DbService,
+    dbService: DynamoDB,
     currentUser: string,
     user?: string
   ): Promise<IResponseWithImages> {
     if (user) {
       log(`Get images for the user ${user}.`);
-      return await dbService.image.getUserImages(pageNumber, pageLimit, pagesAmount, user);
+      return await dbService.getImagesForUser(pageNumber, pageLimit, pagesAmount, user);
     } else {
       log('Get all images.');
-      return await dbService.image.getImagesFromDynamo(pageNumber, pageLimit, pagesAmount, currentUser);
+      return await dbService.getImagesForOnePage(pageNumber, pageLimit, pagesAmount, currentUser);
     }
   }
 
-  async getNumberOfPages(limit: number, dbService: DbService, user?: string): Promise<number> {
+  async getNumberOfPages(limit: number, dbService: DynamoDB, user?: string): Promise<number> {
     if (user) {
-      const userImagesNumber = await dbService.image.getUserImagesNumber(user, limit);
+      const userImagesNumber = await dbService.getNumberOfImagesForUser(user, limit);
       return this.getNumberOfPagesForUser(userImagesNumber);
     }
 
-    const total = await this.service.image.getCommonImagesAmountFromDB();
+    const total = await dbService.getNumberOfSharedImages();
     const totalPages = this.calculatePagesNumber(total);
 
     if (limit) {
