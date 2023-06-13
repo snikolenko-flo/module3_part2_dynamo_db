@@ -1,9 +1,8 @@
-import { Schema, Document } from 'mongoose';
+import { ImagesArray } from './image';
 
-export interface IUser extends Document {
+export interface IUser {
   email: string;
   password: string;
   salt: string;
-  images?: Array<Schema.Types.ObjectId>;
-  isValidPassword: (password: string) => Promise<boolean>;
+  images?: ImagesArray;
 }

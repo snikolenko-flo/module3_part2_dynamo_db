@@ -1,11 +1,9 @@
-import { IUser } from '../interfaces/user';
-import { DbService } from '../services/db-service';
+import { Database } from '../interfaces/database';
 
 export class SignupUser {
-  async createUser(email: string, password: string, salt: string, dbService: DbService): Promise<IUser> {
+  async createUser(email: string, password: string, salt: string, dbService: Database): Promise<void> {
     try {
-      const user = await dbService.createUser(email, password, salt);
-      return user;
+      await dbService.createUser(email, password, salt);
     } catch (e) {
       throw { errorMessage: 'Could not create a new user in database.', statusCode: 400 };
     }

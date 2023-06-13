@@ -3,13 +3,15 @@ import { createResponse } from '@helper/http-api/response';
 import { APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import parseMultipart from 'parse-multipart';
 import { IFileData } from '../interfaces/file';
-import { DbService } from '../services/db-service';
 import jwt from 'jsonwebtoken';
 import { UploadManager } from './upload.manager';
 import { FileService } from '../services/file.service';
+import { DynamoDB } from '../services/dynamo.service';
 
 const secret = process.env.SECRET;
+const s3ImageDirectory = process.env.S3_IMAGE_DIRECTORY;
 const fileService = new FileService();
+const dbService = new DynamoDB();
 
 export const upload: APIGatewayProxyHandlerV2 = async (event) => {
   try {
@@ -18,15 +20,21 @@ export const upload: APIGatewayProxyHandlerV2 = async (event) => {
     const { filename, data, type } = extractFile(event);
     const token = event.headers.authorization;
     const decodedToken = jwt.verify(token, secret);
-    const userEmail = decodedToken.user.email;
+    const userEmail = decodedToken.user;
+    const user = userEmail.split('@')[0];
 
-    const s3filePath = `http://localhost:4569/local-bucket/${filename}`;
-    const metadata = fileService.getMetadata(data, type);
+    const imageMetadata = manager.getMetadata(fileService, data, type);
+    const imageArray = await manager.getImagesArray(userEmail, dbService);
 
-    const dbService = new DbService();
+    imageArray.push({
+      filename: filename,
+      user: user,
+      metadata: imageMetadata,
+      date: new Date(),
+    });
 
-    manager.uploadImageToS3(data, filename, 'local-bucket');
-    await manager.uploadImageDataToDb(metadata, s3filePath, userEmail, dbService);
+    await manager.updateUserInDB(userEmail, imageArray, dbService);
+    await manager.uploadImageToS3(data, `${user}/${filename}`, s3ImageDirectory!);
     return createResponse(200);
   } catch (e) {
     return errorHandler(e);

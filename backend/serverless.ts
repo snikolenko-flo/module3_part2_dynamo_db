@@ -17,14 +17,13 @@ const masterConfig: AWS = {
   params: {
     // default parameters
     default: {
-      //REGION: 'us-east-1',
       REGION: 'ap-northeast-1',
       CLIENT: 'FLO',
-      PROFILE: 'default',
     },
     dev: {},
     prod: {},
     local: {
+      PROFILE: 'snik',
       IS_OFFLINE: true,
       OFFLINE_API_BASE_URL: 'http://localhost:3000/local/',
     },

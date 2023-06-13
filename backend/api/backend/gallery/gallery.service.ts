@@ -1,19 +1,10 @@
 import { log } from '@helper/logger';
-import mongoose from 'mongoose';
 import { PER_PAGE } from '../data/constants.js';
 import { opendir, stat } from 'fs/promises';
-import { Image } from '../models/image.model';
-import { DbService } from '../services/db-service';
-import { IResponseWithImages } from '../interfaces/response';
+import { IResponseWithImages } from '../interfaces/response.js';
+import { Database } from '../interfaces/database.js';
 
-const mongoUrl = process.env.MONGO_URL;
-
-export class GalleryFile {
-  async getFilesAmountFromDb(): Promise<number> {
-    await mongoose.connect(mongoUrl!);
-    return await Image.countDocuments({}).exec();
-  }
-
+export class GalleryService {
   async getFilesAmount(directory: string, counter?: number): Promise<number> {
     try {
       const dir = await opendir(directory);
@@ -55,25 +46,26 @@ export class GalleryFile {
     pageNumber: number,
     pageLimit: number,
     pagesAmount: number,
-    dbService: DbService,
+    dbService: Database,
+    currentUser: string,
     user?: string
   ): Promise<IResponseWithImages> {
     if (user) {
       log(`Get images for the user ${user}.`);
-      return await dbService.getUserImages(pageNumber, pageLimit, pagesAmount, user);
+      return await dbService.getImagesForUser(pageNumber, pageLimit, pagesAmount, user);
     } else {
       log('Get all images.');
-      return await dbService.getImages(pageNumber, pageLimit, pagesAmount);
+      return await dbService.getImagesForOnePage(pageNumber, pageLimit, pagesAmount, currentUser);
     }
   }
 
-  async getNumberOfPages(limit: number, dbService: DbService, user?: string): Promise<number> {
+  async getNumberOfPages(limit: number, dbService: Database, user?: string): Promise<number> {
     if (user) {
-      const userImagesNumber = await dbService.getUserImagesNumber(user, limit);
+      const userImagesNumber = await dbService.getNumberOfImagesForUser(user, limit);
       return this.getNumberOfPagesForUser(userImagesNumber);
     }
 
-    const total = await this.getFilesAmountFromDb();
+    const total = await dbService.getNumberOfSharedImages();
     const totalPages = this.calculatePagesNumber(total);
 
     if (limit) {
@@ -91,7 +83,7 @@ export class GalleryFile {
     return this.calculatePagesNumber(filesNumber);
   }
 
-  private calculatePagesNumber(filesAmount) {
+  private calculatePagesNumber(filesAmount: number): number {
     const onePage = 1;
     if (filesAmount <= PER_PAGE) return onePage;
 

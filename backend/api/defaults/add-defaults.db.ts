@@ -1,8 +1,11 @@
-import { DbService } from './db-service';
+import { DynamoDB } from '../backend/services/dynamo.service';
+import { defaultUsersArray } from './default.users';
+import { Database } from '../backend/interfaces/database';
 
 const imagesDir = './api/backend/images';
-const mongoUrl = 'mongodb://localhost:27017/test';
+const dbService: Database = new DynamoDB();
 
-const dbService = new DbService();
-
-(async () => await dbService.startDb(imagesDir!, mongoUrl!))();
+(async () => {
+  await dbService.addDefaultUsersToDB(defaultUsersArray);
+  await dbService.addImagesDataToDB(imagesDir);
+})();
