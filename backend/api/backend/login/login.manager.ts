@@ -1,9 +1,10 @@
 import crypto from 'crypto';
 import util from 'util';
 import { IUser } from '../interfaces/user';
+import { Database } from '../interfaces/database';
 
 export class LoginManager {
-  async findUser(email: string, dbService: any): Promise<IUser> {
+  async findUser(email: string, dbService: Database): Promise<IUser> {
     try {
       return await dbService.findUser(email);
     } catch (e) {

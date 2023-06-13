@@ -1,5 +1,7 @@
+import { Database } from '../interfaces/database';
+
 export class SignupUser {
-  async createUser(email: string, password: string, salt: string, dbService: any): Promise<void> {
+  async createUser(email: string, password: string, salt: string, dbService: Database): Promise<void> {
     try {
       await dbService.createUser(email, password, salt);
     } catch (e) {

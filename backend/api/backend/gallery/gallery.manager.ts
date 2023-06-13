@@ -1,6 +1,7 @@
 import { createResponse } from '@helper/http-api/response';
 import { APIGatewayProxyResult } from 'aws-lambda/trigger/api-gateway-proxy';
 import { GalleryService } from './gallery.service.js';
+import { Database } from '../interfaces/database.js';
 
 export class GalleryManager {
   service: GalleryService;
@@ -13,7 +14,7 @@ export class GalleryManager {
     user: string,
     pageNumber: number,
     pageLimit: number,
-    dbService: any,
+    dbService: Database,
     currentUser: string
   ): Promise<APIGatewayProxyResult> {
     const pagesAmount = await this.service.getNumberOfPages(pageLimit, dbService, user);

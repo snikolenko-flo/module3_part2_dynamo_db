@@ -3,13 +3,14 @@ import { ImagesArray } from '../interfaces/image';
 import { GetObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { FileService } from '../services/file.service';
+import { Database } from '../interfaces/database';
 
 export class UploadManager {
   uploadImageToS3(data: Buffer, filename: string, bucket: string): void {
     uploadToS3(data, filename, bucket);
   }
 
-  async getImagesArray(userEmail: string, dbService: any): Promise<ImagesArray> {
+  async getImagesArray(userEmail: string, dbService: Database): Promise<ImagesArray> {
     try {
       return await dbService.getImagesArray(userEmail);
     } catch (e) {
@@ -17,7 +18,7 @@ export class UploadManager {
     }
   }
 
-  async updateUserInDB(userEmail: string, arrayOfImages: ImagesArray, dbService: any): Promise<void> {
+  async updateUserInDB(userEmail: string, arrayOfImages: ImagesArray, dbService: Database): Promise<void> {
     try {
       return await dbService.updateUserInDB(userEmail, arrayOfImages);
     } catch (e) {

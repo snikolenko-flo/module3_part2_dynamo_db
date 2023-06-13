@@ -2,7 +2,7 @@ import { log } from '@helper/logger';
 import { PER_PAGE } from '../data/constants.js';
 import { opendir, stat } from 'fs/promises';
 import { IResponseWithImages } from '../interfaces/response.js';
-import { DynamoDB } from '../services/dynamo.service.js';
+import { Database } from '../interfaces/database.js';
 
 export class GalleryService {
   async getFilesAmount(directory: string, counter?: number): Promise<number> {
@@ -46,7 +46,7 @@ export class GalleryService {
     pageNumber: number,
     pageLimit: number,
     pagesAmount: number,
-    dbService: DynamoDB,
+    dbService: Database,
     currentUser: string,
     user?: string
   ): Promise<IResponseWithImages> {
@@ -59,7 +59,7 @@ export class GalleryService {
     }
   }
 
-  async getNumberOfPages(limit: number, dbService: DynamoDB, user?: string): Promise<number> {
+  async getNumberOfPages(limit: number, dbService: Database, user?: string): Promise<number> {
     if (user) {
       const userImagesNumber = await dbService.getNumberOfImagesForUser(user, limit);
       return this.getNumberOfPagesForUser(userImagesNumber);
